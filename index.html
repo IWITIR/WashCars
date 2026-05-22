@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>WashCars</title>
+    <link rel="stylesheet" href="./style.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "@dimforge/rapier3d-compat": "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="cursor"></div>
+    <div id="menu" class="ui-popup">
+        <button id="menu-close-btn" type="button">X</button>
+        Menu
+    </div>
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>

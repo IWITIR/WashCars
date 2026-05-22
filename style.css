@@ -1,0 +1,63 @@
+:root {
+    --color-bg-app: #222222;
+    --color-ui-popup-bg: rgba(46, 151, 238, 0.8);
+    --color-ui-popup-text: #ffffff;
+}
+
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: var(--color-bg-app);
+}
+
+canvas {
+    display: block;
+}
+
+/* 시각적인 클릭 가이드를 위한 작은 십자선(커서) */
+#cursor {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.ui-popup {
+    position: absolute;       
+    top: 50%;                 
+    left: 50%;               
+    transform: translate(-50%, -50%); 
+    
+    background-color: var(--color-ui-popup-bg); 
+    color: var(--color-ui-popup-text);          
+    padding: 20px 40px;
+    border: 1px solid var(--color-ui-popup-text);
+    border-radius: 8px;
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    text-align: center;
+    pointer-events: none;     /* 마우스 클릭이 팝업을 뚫고 캔버스로 가도록 허용 */
+    z-index: 100;             /* WebGL 캔버스보다 무조건 위에 오도록 설정 */
+    
+    /* 애니메이션용 초기 상태 (숨김) */
+    opacity: 0;
+    transition: opacity 0.75s ease-in-out;
+}
+
+/* 팝업이 켜졌을 때의 클래스 */
+.ui-popup.show {
+    pointer-events: auto; /* 팝업이 보이는 동안에는 클릭 가능 */
+    opacity: 1;
+}
