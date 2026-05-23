@@ -4,7 +4,13 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import { collisionPlayer } from './CollisionGroup.js';
 
 export class Player {
-    constructor({scene, camera, renderer, world, startPos = { x: 0, y: 0, z: 0 }, collisionGroups = collisionPlayer}) {
+    constructor({scene,
+                 camera,
+                 renderer, 
+                 world, 
+                 startPos = { x: 0, y: 0, z: 0 }, 
+                 collisionGroups = collisionPlayer
+                }) {
         this.scene = scene;
         this.camera = camera;
         this.world = world;
@@ -18,8 +24,8 @@ export class Player {
         this.velocity = new THREE.Vector3();
         
         // 캡슐 형태의 콜라이더 
-        const halfHeight = 15;
-        const radius = 4;
+        const halfHeight = 8;
+        const radius = 3;
         this.eyeHeightOffset = halfHeight * 1.8; // 눈높이를 캡슐 상단 근처로 설정
 
         // --- 2. Rapier 플레이어 물리 바디 세팅 (Kinematic) ---
@@ -57,7 +63,6 @@ export class Player {
         }
     }
 
-    // ESC키로 마우스 락 해제 -> 추후에 메뉴 도입
     control_unlock() {
         console.log('mouse unlock requested: menu open');
         this.menuPopup.classList.add('show');
@@ -117,6 +122,7 @@ export class Player {
         this.mouseCanLock = true; // 초기에는 마우스 잠금 허용 상태
         this.menuPopup = document.getElementById('menu');
         this.menuOpen = false; // 메뉴는 기본적으로 닫혀있음
+
         window.addEventListener('click', () => {
             if (!this.controls.isLocked && !this.menuOpen) {
                 this.control_lock();
@@ -130,12 +136,6 @@ export class Player {
             this.control_lock();
         });
 
-        // 기본 마우스 락 해제가 ESC키이므로, 키다운 대신 unlock시 이벤트로 호출
-        // window.addEventListener('keydown', (event) => {
-        //     if (this.controls.isLocked && event.code === 'Escape') {
-        //         this.control_unlock();
-        //     }
-        // });
         this.controls.addEventListener('unlock', () => {
             this.control_unlock();
         });

@@ -6,7 +6,16 @@ import { collisionALL, collisionPlayer, collisionWash } from './CollisionGroup.j
 const gltfLoader = new GLTFLoader();
 
 export class Model {
-  constructor({ world, path, isHollow = false, collisionGroups = collisionALL }) {
+  constructor({
+    world,
+    path,
+    isHollow = false,
+    collisionGroups = collisionALL,
+    materialOverride = null,
+    preserveMaterialMaps = false,
+    preserveMaterialState = true,
+    scale = 1,
+  }) {
     this.world = world;
     this.group = new THREE.Group();
     this.model = null;
@@ -14,14 +23,18 @@ export class Model {
     this.isHollow = isHollow;
     this.collisionGroups = collisionGroups; // 충돌 그룹 저장
     this.rigidBody = null;
+    this.scale = scale;
 
     gltfLoader.load(
       path,
       (gltf) => {
         this.model = gltf.scene;
+        this.applyMaterialOverride(materialOverride, preserveMaterialMaps, preserveMaterialState);
+        this.rescale(this.scale, { rebuildPhysics: false });
         this.group.add(this.model);
         this.isLoaded = true;
         this.setupPhysics();
+        this.onModelLoaded();
       },
       undefined,
       (error) => {
@@ -87,4 +100,108 @@ export class Model {
       this.world.createCollider(backWallDesc, this.rigidBody);
     }
   }
-}
+
+  // GLB 모델의 머테리얼을 일괄적으로 오버라이드하는 함수
+  applyMaterialOverride(materialOverride, preserveMaterialMaps, preserveMaterialState = true) {
+    if (!this.model || !materialOverride) return;
+
+    this.model.traverse((child) => {
+      if (!child.isMesh) return;
+
+      // 머테리얼이 배열인 경우 각 요소에 대해 오버라이드 적용
+      if (Array.isArray(child.material)) {
+        child.material = child.material.map((originalMaterial) =>
+          this.buildOverrideMaterial(child, originalMaterial, materialOverride, preserveMaterialMaps, preserveMaterialState)
+        );
+        return;
+      }
+
+      // 머테리얼이 단일인 경우 바로 오버라이드 적용
+      child.material = this.buildOverrideMaterial(
+        child,
+        child.material,
+        materialOverride,
+        preserveMaterialMaps,
+        preserveMaterialState
+      );
+    });
+  }
+
+  // 오버라이드 될 머테리얼이 glb에 맞는 프로퍼티를 유지하도록 설정
+  buildOverrideMaterial(mesh, originalMaterial, materialOverride, preserveMaterialMaps, preserveMaterialState = true) {
+
+    // materialOverride를 함수로 받아서 메시마다 다른 머테리얼을 적용할 수 있도록 지원
+    const nextMaterial = typeof materialOverride === 'function'
+      ? materialOverride({ mesh, originalMaterial })
+      : materialOverride.clone();
+
+    if (!nextMaterial) {
+      return originalMaterial;
+    }
+
+    if (preserveMaterialMaps) {
+      this.copyMaterialMaps(originalMaterial, nextMaterial);
+    }
+
+    if (originalMaterial.color && nextMaterial.color) {
+      nextMaterial.color.copy(originalMaterial.color);
+    }
+
+    if (originalMaterial.emissive && nextMaterial.emissive) {
+      nextMaterial.emissive.copy(originalMaterial.emissive);
+      nextMaterial.emissiveIntensity = originalMaterial.emissiveIntensity;
+    }
+
+    if (preserveMaterialState) {
+      nextMaterial.transparent = originalMaterial.transparent;
+      nextMaterial.opacity = originalMaterial.opacity;
+      nextMaterial.alphaTest = originalMaterial.alphaTest;
+      nextMaterial.side = originalMaterial.side;
+    }
+
+    nextMaterial.needsUpdate = true;
+
+    return nextMaterial;
+  }
+
+  copyMaterialMaps(originalMaterial, nextMaterial) {
+    const mapKeys = [
+      'map',
+      'alphaMap',
+      'aoMap',
+      'bumpMap',
+      'displacementMap',
+      'emissiveMap',
+      'lightMap',
+      'metalnessMap',
+      'normalMap',
+      'roughnessMap',
+    ];
+
+    for (const key of mapKeys) {
+      if (originalMaterial[key] && nextMaterial[key] == null) {
+        nextMaterial[key] = originalMaterial[key];
+      }
+    }
+  }
+
+  rescale(factor, { rebuildPhysics = true } = {}) {
+    this.scale = factor;
+
+    if (!this.model) return;
+
+    this.model.scale.set(factor, factor, factor);
+    this.model.updateMatrixWorld(true);
+
+    if (!rebuildPhysics || !this.world) return;
+
+    if (this.rigidBody) {
+      this.world.removeRigidBody(this.rigidBody);
+      this.rigidBody = null;
+    }
+
+    this.setupPhysics();
+  }
+
+  onModelLoaded() {}
+}  

@@ -7,6 +7,7 @@ const GROUP_STATICMESH = 0x0002;
 const GROUP_INTERACTABLE = 0x0004;
 const GROUP_WASH = 0x0008;
 
+const collisionNone = 0x00000000;
 const collisionALL = 0xFFFFFFFF;
 const collisionPlayer = 
     GROUP_PLAYER << 16 | GROUP_STATICMESH | GROUP_INTERACTABLE; 
