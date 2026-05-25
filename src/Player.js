@@ -10,12 +10,14 @@ export class Player {
         camera,
         renderer,
         world,
+        audioManager = null,
         startPos = { x: 0, y: 0, z: 0 },
         collisionGroups = collisionPlayer
     }) {
         this.scene = scene;
         this.camera = camera;
         this.world = world;
+        this.audioManager = audioManager;
 
         // --- 1. 물리 스펙 (플레이어 크기 및 속도) ---
         this.speed = 30.0;
@@ -54,6 +56,11 @@ export class Player {
         // --- 4. 키보드 입력 상태 ---
         this.moveState = { forward: false, backward: false, left: false, right: false };
         this.isJumping = false;
+        this.footstepTimer = 0;
+        this.footstepIndex = 0;
+        this.walkStepInterval = 0.45;
+        this.runStepInterval = 0.24;
+        this.crouchStepInterval = 0.65;
 
         // --- 5. WashGun 세팅 ---
         this.washGun = new WashGun({ player: this });
@@ -99,7 +106,9 @@ export class Player {
                     this.moveState.right = true;
                     break;
                 case 'KeyR':
-                    this.washGun?.reload();
+                    if (this.washGun?.reload()) {
+                        this.audioManager?.playOneShot('reload');
+                    }
                     break;
                 case 'Space':
                     // 바닥에 닿아있을 때만 점프 허용
@@ -226,5 +235,40 @@ export class Player {
         // 카메라는 물리 바디의 눈높이에 따라감. 앉기 상태에 따라 눈높이 조정
         const eyeHeight = this.crouching ? this.eyeHeightOffset * 0.5 : this.eyeHeightOffset;
         this.camera.position.set(nextPos.x, nextPos.y + eyeHeight, nextPos.z);
+
+        this.updateFootsteps(delta);
+    }
+
+    updateFootsteps(delta) {
+        const isMoving =
+            this.moveState.forward ||
+            this.moveState.backward ||
+            this.moveState.left ||
+            this.moveState.right;
+        const isGrounded = this.characterController.computedGrounded();
+
+        if (!this.audioManager || !isMoving || !isGrounded) {
+            this.footstepTimer = 0;
+            return;
+        }
+
+        this.footstepTimer -= delta;
+        if (this.footstepTimer > 0) return;
+
+        const soundName = this.footstepIndex % 2 === 0 ? 'footstep1' : 'footstep2';
+        this.audioManager.playOneShot(soundName);
+        this.footstepIndex += 1;
+
+        this.footstepTimer = this.getFootstepInterval();
+    }
+
+    getFootstepInterval() {
+        if (this.crouching) {
+            return this.crouchStepInterval;
+        }
+
+        return this.speedMultiplier > 1
+            ? this.runStepInterval
+            : this.walkStepInterval;
     }
 }

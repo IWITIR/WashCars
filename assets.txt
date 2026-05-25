@@ -1,4 +1,31 @@
+garage / washGun / laptop / table : self-made on blender.
+
 concrete material:
 Concrete 030 | ambient CG (CC0)
 https://ambientcg.com/view?id=Concrete030
+
 shutter material:
+Corrugated Steel 009 | ambient CG (CC0)
+https://ambientcg.com/view?id=CorrugatedSteel009
+
+muscle_car:
+Dodge Challenger - Muscle Car - Low-Poly | sketchfab (free-standard)
+https://sketchfab.com/3d-models/dodge-challenger-muscle-car-low-poly-4c741c8d40c34ebe8b999e5a2823d80f 
+
+
+sounds-
+footsteps sound:
+Footsteps In Squeaky Shoes | freesound.org (CC0)
+https://freesound.org/people/Navadaux/sounds/448744/
+
+water-hose sound:
+Karcher Pressure Hose.wav | freesound.org (CC0)
+https://freesound.org/people/laurent3.0/sounds/496517/
+
+water-hitting sound:
+rain hitting leaf.wav | freesound.org (CC0)
+https://freesound.org/people/irfanpipo/sounds/649649/
+
+reload sound:
+Potion - drink - swallow.wav | freesound.org (CC0)
+https://freesound.org/people/ValentinPetiteau/sounds/574077/

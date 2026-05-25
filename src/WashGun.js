@@ -362,12 +362,14 @@ export class WashGun {
         this.waterBallUniforms.uWorldUp.value.copy(this.worldUpFromWaterball);
     }
 
+    // 재장전을 성공적으로 시작하면 true, 아니면 false를 반환
     reload() {
-        if (this.isReloading || !this.parts.fuel) return;
+        if (this.isReloading || !this.parts.fuel) return false;
 
         this.reloadTime = 0;
         this.reloadStartFillLevel = this.waterFillLevel;
         this.isReloading = true;
+        return true;
     }
 
     // 코드레벨에서 애니메이션 부여

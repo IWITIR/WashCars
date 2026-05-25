@@ -3,6 +3,7 @@ import Stats from 'three/addons/libs/stats.module.js';
 import { Player } from './Player.js';
 import { loadModels } from './LoadModels.js';
 import { setupLighting } from './SetupLighting.js';
+import { loadSounds } from './LoadSounds.js';
 import * as Collision from './CollisionGroup.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 
@@ -33,6 +34,9 @@ const world = new RAPIER.World(gravity);
 // 모델 임포트
 const { washableModels } = loadModels({ scene, world });
 
+// 사운드 세팅
+const audioManager = await loadSounds(camera);
+
 // 플레이어 세팅
 const player = new Player({
     scene,
@@ -40,7 +44,8 @@ const player = new Player({
     renderer,
     world,
     startPos: new THREE.Vector3(30, 8, 5), // 플레이어 시작 위치 (원점에서 약간 뒤쪽)
-    collisionGroups: Collision.collisionPlayer
+    collisionGroups: Collision.collisionPlayer,
+    audioManager,
 });
 
 // 2. 레이캐스터 (수압 총) 세팅
@@ -75,6 +80,7 @@ function gameUpdate() {
     // 물을 쏘고 있을 때의 충돌(때 지우기) 연산
     if (isWashing && player.washGun.waterFillLevel > 0) {
         player.washGun.waterFillLevel = Math.max(0, player.washGun.waterFillLevel - delta * 0.50);
+        audioManager.play('water_hose', { position: player.rigidBody.translation() });
 
         const washMeshes = washableModels.flatMap((model) => model.getWashMeshes());
         const intersects = raycaster.intersectObjects(washMeshes, false);
@@ -86,8 +92,14 @@ function gameUpdate() {
             if (washableModel) {
                 sprayTarget.copy(hit.point);
                 washableModel.wash(hit, washRangeConfig.baseRadius);
+                audioManager.play('water_hit', { position: hit.point });
             }
+        } else {
+            audioManager.stop('water_hit');
         }
+    } else {
+        audioManager.stop('water_hose');
+        audioManager.stop('water_hit');
     }
 
     player.washGun.updateWaterStream(
