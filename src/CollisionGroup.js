@@ -9,23 +9,23 @@ const GROUP_WASH = 0x0008;
 
 const collisionNone = 0x00000000;
 const collisionALL = 0xFFFFFFFF;
-const collisionPlayer = 
-    GROUP_PLAYER << 16 | GROUP_STATICMESH | GROUP_INTERACTABLE; 
+const collisionPlayer =
+    GROUP_PLAYER << 16 | GROUP_STATICMESH | GROUP_INTERACTABLE;
 
-const collisionSM = 
+const collisionSM =
     GROUP_STATICMESH << 16 | GROUP_PLAYER | GROUP_INTERACTABLE;
 
-const collisionWash = 
+const collisionWash =
     GROUP_WASH << 16 | GROUP_STATICMESH | GROUP_INTERACTABLE;
 
 const collisionInteractable =
     GROUP_INTERACTABLE << 16 | GROUP_PLAYER | GROUP_WASH | GROUP_STATICMESH;
 
 
-export { 
-    collisionALL, 
-    collisionPlayer, 
+export {
+    collisionALL,
+    collisionPlayer,
     collisionSM,
-    collisionWash, 
+    collisionWash,
     collisionInteractable
 };

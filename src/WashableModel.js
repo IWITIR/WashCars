@@ -1,115 +1,119 @@
 import * as THREE from 'three';
 import { Model } from './Model.js';
 
+// 세척 가능한 모델 : 메시마다 dirt overlay를 생성합니다.
 export class WashableModel extends Model {
-  constructor({
-    dirtColor = 0x332211,
-    dirtRoughness = 0.9,
-    dirtScale = 1.0,
-    washRadius = 30,
-    washStrength = 0.08,
-    maskSize = 1024,
-    ...modelOptions
-  }) {
-    super(modelOptions);
+    constructor({
+        dirtColor = 0x332211,
+        dirtRoughness = 0.9,
+        dirtScale = 1.0,
+        washRadius = 30,
+        washStrength = 0.08,
+        maskSize = 1024,
+        ...modelOptions
+    }) {
+        super(modelOptions);
 
-    this.dirtColor = dirtColor;
-    this.dirtRoughness = dirtRoughness;
-    this.dirtScale = dirtScale;
-    this.washRadius = washRadius;
-    this.washStrength = washStrength;
-    this.maskSize = maskSize;
-    this.washTargets = [];
-  }
-
-  onModelLoaded() {
-    if (!this.model) return;
-
-    const sourceMeshes = [];
-
-    // 모델에서 모든 메시를 수집
-    this.model.traverse((child) => {
-      if (!child.isMesh || !child.geometry?.attributes?.uv) return;
-      if (Array.isArray(child.material)) return;
-
-      sourceMeshes.push(child);
-    });
-
-    for (const sourceMesh of sourceMeshes) {
-      const overlay = this.createDirtOverlay(sourceMesh);
-      if (!overlay) continue;
-
-      sourceMesh.add(overlay.mesh);
-      this.washTargets.push(overlay);
+        this.dirtColor = dirtColor;
+        this.dirtRoughness = dirtRoughness;
+        this.dirtScale = dirtScale;
+        this.washRadius = washRadius;
+        this.washStrength = washStrength;
+        this.maskSize = maskSize;
+        this.washTargets = [];
     }
-  }
 
-  createDirtOverlay(sourceMesh) {
-    const canvas = document.createElement('canvas');
-    canvas.width = this.maskSize;
-    canvas.height = this.maskSize;
+    // 콜백 함수 오버라이드
+    onModelLoaded() {
+        if (!this.model) return;
 
-    const context = canvas.getContext('2d');
-    if (!context) return null;
+        const sourceMeshes = [];
 
-    context.fillStyle = 'white';
-    context.fillRect(0, 0, this.maskSize, this.maskSize);
+        // 모델에서 모든 메시를 수집
+        this.model.traverse((child) => {
+            if (!child.isMesh || !child.geometry?.attributes?.uv) return;
+            if (Array.isArray(child.material)) return;
 
-    const maskTexture = new THREE.CanvasTexture(canvas);
-    maskTexture.flipY = false;
+            sourceMeshes.push(child);
+        });
 
-    const dirtMaterial = new THREE.MeshStandardMaterial({
-      color: this.dirtColor,
-      roughness: this.dirtRoughness,
-      metalness: 0,
-      transparent: true,
-      alphaMap: maskTexture,
-      alphaTest: 0.05,
-      depthWrite: false,
-      polygonOffset: true,
-      polygonOffsetFactor: -1,
-      polygonOffsetUnits: -1,
-      side: THREE.FrontSide,
-    });
+        // 수집된 메시마다 오버레이 생성 및 저장
+        for (const sourceMesh of sourceMeshes) {
+            const overlay = this.createDirtOverlay(sourceMesh);
+            if (!overlay) continue;
 
-    const dirtMesh = new THREE.Mesh(sourceMesh.geometry, dirtMaterial);
-    dirtMesh.name = `${sourceMesh.name || 'washable'}_dirt`;
-    dirtMesh.scale.setScalar(this.dirtScale);
-    dirtMesh.renderOrder = (sourceMesh.renderOrder || 0) + 1;
-    dirtMesh.raycast = THREE.Mesh.prototype.raycast;
+            sourceMesh.add(overlay.mesh);
+            this.washTargets.push(overlay);
+        }
+    }
 
-    return {
-      sourceMesh,
-      mesh: dirtMesh,
-      canvas,
-      context,
-      maskTexture,
-    };
-  }
+    createDirtOverlay(sourceMesh) {
+        const canvas = document.createElement('canvas');
+        canvas.width = this.maskSize;
+        canvas.height = this.maskSize;
 
-  getWashMeshes() {
-    return this.washTargets.map((target) => target.mesh);
-  }
+        const context = canvas.getContext('2d');
+        if (!context) return null;
 
-  wash(hit, radius = this.washRadius) {
-    if (!hit?.object || !hit.uv) return;
+        context.fillStyle = 'white';
+        context.fillRect(0, 0, this.maskSize, this.maskSize);
 
-    const target = this.washTargets.find((item) => item.mesh === hit.object);
-    if (!target) return;
+        const maskTexture = new THREE.CanvasTexture(canvas);
+        maskTexture.flipY = false;
 
-    const x = hit.uv.x * this.maskSize;
-    const y = hit.uv.y * this.maskSize;
-    const strength = Math.min(Math.max(this.washStrength, 0), 1);
-    const gradient = target.context.createRadialGradient(x, y, 0, x, y, radius);
+        const dirtMaterial = new THREE.MeshStandardMaterial({
+            color: this.dirtColor,
+            roughness: this.dirtRoughness,
+            metalness: 0,
+            transparent: true,
+            alphaMap: maskTexture,
+            alphaTest: 0.05,
+            depthWrite: false,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -1,
+            side: THREE.FrontSide,
+        });
 
-    gradient.addColorStop(0, `rgba(0, 0, 0, ${strength})`);
-    gradient.addColorStop(0.65, `rgba(0, 0, 0, ${strength * 0.7})`);
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        const dirtMesh = new THREE.Mesh(sourceMesh.geometry, dirtMaterial);
+        dirtMesh.name = `${sourceMesh.name || 'washable'}_dirt`;
+        dirtMesh.scale.setScalar(this.dirtScale);
+        dirtMesh.renderOrder = (sourceMesh.renderOrder || 0) + 1;
+        dirtMesh.raycast = THREE.Mesh.prototype.raycast;
+        dirtMesh.washableModel = this;
 
-    target.context.beginPath();
-    target.context.arc(x, y, radius, 0, Math.PI * 2);
-    target.context.fillStyle = gradient;
-    target.context.fill();
-    target.maskTexture.needsUpdate = true;
-  }
+        return {
+            sourceMesh,
+            mesh: dirtMesh,
+            canvas,
+            context,
+            maskTexture,
+        };
+    }
+
+    getWashMeshes() {
+        return this.washTargets.map((target) => target.mesh);
+    }
+
+    wash(hit, radius = this.washRadius) {
+        if (!hit?.object || !hit.uv) return;
+
+        const target = this.washTargets.find((item) => item.mesh === hit.object);
+        if (!target) return;
+
+        const x = hit.uv.x * this.maskSize;
+        const y = hit.uv.y * this.maskSize;
+        const strength = Math.min(Math.max(this.washStrength, 0), 1);
+        const gradient = target.context.createRadialGradient(x, y, 0, x, y, radius);
+
+        gradient.addColorStop(0, `rgba(0, 0, 0, ${strength})`);
+        gradient.addColorStop(0.65, `rgba(0, 0, 0, ${strength * 0.7})`);
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        target.context.beginPath();
+        target.context.arc(x, y, radius, 0, Math.PI * 2);
+        target.context.fillStyle = gradient;
+        target.context.fill();
+        target.maskTexture.needsUpdate = true;
+    }
 }

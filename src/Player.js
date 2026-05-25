@@ -5,13 +5,14 @@ import { collisionPlayer } from './CollisionGroup.js';
 import { WashGun } from './WashGun.js';
 
 export class Player {
-    constructor({scene,
-                 camera,
-                 renderer, 
-                 world, 
-                 startPos = { x: 0, y: 0, z: 0 }, 
-                 collisionGroups = collisionPlayer
-                }) {
+    constructor({
+        scene,
+        camera,
+        renderer,
+        world,
+        startPos = { x: 0, y: 0, z: 0 },
+        collisionGroups = collisionPlayer
+    }) {
         this.scene = scene;
         this.camera = camera;
         this.world = world;
@@ -19,13 +20,13 @@ export class Player {
         // --- 1. 물리 스펙 (플레이어 크기 및 속도) ---
         this.speed = 30.0;
         this.speedMultiplier = 1.0; // 이동 속도 배율 (Shift 키로 달리기)
-        this.jumpForce = 50.0; // 조율된 값 
+        this.jumpForce = 50.0; // 조율된 값
         this.gravity = world.gravity.y * 4.0; // 기존 대비 2배 빠른 점프를 위해 중력은 4배
         this.jumpCutMultiplier = 0.45; // 점프 중 키를 떼면 상승 속도를 즉시 줄여 짧은 점프 구현
         this.velocity = new THREE.Vector3();
         this.crouching = false; // 앉기 상태 플래그
-        
-        // 캡슐 형태의 콜라이더 
+
+        // 캡슐 형태의 콜라이더
         const halfHeight = 8;
         const radius = 3;
         this.eyeHeightOffset = halfHeight * 1.8; // 눈높이를 캡슐 상단 근처로 설정
@@ -74,7 +75,7 @@ export class Player {
         this.menuPopup.classList.add('show');
         this.menuOpen = true; // 메뉴가 열렸다고 상태 업데이트
         this.mouseCanLock = false; // 마우스가 풀리면 즉시 잠금 차단
-    
+
         // 브라우저 쿨다운(1.5초)이 지나면 다시 잠금 허용
         setTimeout(() => {
             this.mouseCanLock = true;
@@ -88,19 +89,19 @@ export class Player {
             switch (e.code) {
                 case 'KeyW': this.moveState.forward = true;
                     break;
-                case 'KeyS': 
-                    this.moveState.backward = true; 
+                case 'KeyS':
+                    this.moveState.backward = true;
                     break;
-                case 'KeyA': 
-                    this.moveState.left = true; 
+                case 'KeyA':
+                    this.moveState.left = true;
                     break;
-                case 'KeyD': 
-                    this.moveState.right = true; 
+                case 'KeyD':
+                    this.moveState.right = true;
                     break;
                 case 'KeyR':
                     this.washGun?.reload();
                     break;
-                case 'Space': 
+                case 'Space':
                     // 바닥에 닿아있을 때만 점프 허용
                     if (this.characterController.computedGrounded()) {
                         this.velocity.y = this.jumpForce;
@@ -193,7 +194,7 @@ export class Player {
 
         // --- [B] 중력 연산 ---
         this.velocity.y += this.gravity * delta;
-        
+
         // 이동할 총 변위량 (X, Z는 WASD 이동 / Y는 중력+점프)
         const desiredTranslation = {
             x: moveDir.x,
@@ -208,7 +209,7 @@ export class Player {
 
         // 바닥에 닿았다면 중력 가속도 초기화 (계속 떨어지는 것 방지)
         if (this.characterController.computedGrounded()) {
-            this.velocity.y = Math.max(0, this.velocity.y); 
+            this.velocity.y = Math.max(0, this.velocity.y);
         }
 
         // --- [D] 연산 결과를 실제 바디와 카메라에 적용 ---
@@ -221,7 +222,7 @@ export class Player {
 
         // 물리 바디 이동
         this.rigidBody.setNextKinematicTranslation(nextPos);
-        
+
         // 카메라는 물리 바디의 눈높이에 따라감. 앉기 상태에 따라 눈높이 조정
         const eyeHeight = this.crouching ? this.eyeHeightOffset * 0.5 : this.eyeHeightOffset;
         this.camera.position.set(nextPos.x, nextPos.y + eyeHeight, nextPos.z);

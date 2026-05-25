@@ -1,7 +1,4 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import RAPIER from '@dimforge/rapier3d-compat';
-import { collisionALL, collisionPlayer, collisionWash } from './CollisionGroup.js';
 import { Model } from './Model.js';
 import { WashableModel } from './WashableModel.js';
 import * as Collision from './CollisionGroup.js';
@@ -74,5 +71,8 @@ export function loadModels({ scene, world }) {
     muscle_car.rescale(6.0);
     scene.add(muscle_car.group);
 
-    return { muscle_car };
+    return {
+        muscle_car,
+        washableModels: [muscle_car],
+    };
 }

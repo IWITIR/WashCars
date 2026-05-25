@@ -1,8 +1,5 @@
 import * as THREE from 'three';
 import Stats from 'three/addons/libs/stats.module.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { Model } from './Model.js';
 import { Player } from './Player.js';
 import { loadModels } from './LoadModels.js';
 import { setupLighting } from './SetupLighting.js';
@@ -34,7 +31,7 @@ const gravity = { x: 0, y: -30, z: 0 }; // 중력은 플레이적으로 조율�
 const world = new RAPIER.World(gravity);
 
 // 모델 임포트
-const { muscle_car } = loadModels({ scene, world });
+const { washableModels } = loadModels({ scene, world });
 
 // 플레이어 세팅
 const player = new Player({
@@ -59,11 +56,6 @@ const washRangeConfig = {
     multiplier: 1,
 };
 
-function getCurrentWashRadius() {
-    return washRangeConfig.baseRadius * washRangeConfig.multiplier;
-}
-
-player.washGun.setSprayFromWashRadius(getCurrentWashRadius());
 
 // 좌클릭을 누르고 있을 때 물을 쏜다고 판정
 window.addEventListener('mousedown', (e) => { if (e.button === 0) isWashing = true; });
@@ -75,7 +67,7 @@ function gameUpdate() {
 
     const delta = clock.getDelta();
     player.update(delta);
-    
+
     // 커서 기준 물줄기 타겟 계산 (히트가 없으면 전방 고정 거리)
     raycaster.setFromCamera(centerPos, camera);
     sprayTarget.copy(raycaster.ray.origin).addScaledVector(raycaster.ray.direction, maxSprayDistance);
@@ -84,15 +76,17 @@ function gameUpdate() {
     if (isWashing && player.washGun.waterFillLevel > 0) {
         player.washGun.waterFillLevel = Math.max(0, player.washGun.waterFillLevel - delta * 0.50);
 
-        const washMeshes = muscle_car?.getWashMeshes() ?? [];
+        const washMeshes = washableModels.flatMap((model) => model.getWashMeshes());
         const intersects = raycaster.intersectObjects(washMeshes, false);
 
         if (intersects.length > 0) {
             const hit = intersects[0];
-            sprayTarget.copy(hit.point);
-            const currentWashRadius = getCurrentWashRadius();
-            player.washGun.setSprayFromWashRadius(currentWashRadius);
-            muscle_car.wash(hit, currentWashRadius);
+            const washableModel = hit.object.washableModel;
+
+            if (washableModel) {
+                sprayTarget.copy(hit.point);
+                washableModel.wash(hit, washRangeConfig.baseRadius);
+            }
         }
     }
 
