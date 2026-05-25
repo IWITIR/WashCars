@@ -29,8 +29,8 @@ export function setupLighting(scene) {
     scene.add(lightingHelperRoot);
 
     window.addEventListener('keydown', (e) => {
-        console.log('Helper toggle key pressed');
         if (e.code === 'KeyH') {
+            console.log('Helper toggle key pressed');
             showHelpers = !showHelpers;
             lightingHelperRoot.traverse((child) => {
                     child.visible = showHelpers;

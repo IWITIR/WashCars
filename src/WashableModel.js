@@ -5,8 +5,9 @@ export class WashableModel extends Model {
   constructor({
     dirtColor = 0x332211,
     dirtRoughness = 0.9,
-    dirtScale = 1.002,
+    dirtScale = 1.0,
     washRadius = 30,
+    washStrength = 0.08,
     maskSize = 1024,
     ...modelOptions
   }) {
@@ -16,6 +17,7 @@ export class WashableModel extends Model {
     this.dirtRoughness = dirtRoughness;
     this.dirtScale = dirtScale;
     this.washRadius = washRadius;
+    this.washStrength = washStrength;
     this.maskSize = maskSize;
     this.washTargets = [];
   }
@@ -97,10 +99,16 @@ export class WashableModel extends Model {
 
     const x = hit.uv.x * this.maskSize;
     const y = hit.uv.y * this.maskSize;
+    const strength = Math.min(Math.max(this.washStrength, 0), 1);
+    const gradient = target.context.createRadialGradient(x, y, 0, x, y, radius);
+
+    gradient.addColorStop(0, `rgba(0, 0, 0, ${strength})`);
+    gradient.addColorStop(0.65, `rgba(0, 0, 0, ${strength * 0.7})`);
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
     target.context.beginPath();
     target.context.arc(x, y, radius, 0, Math.PI * 2);
-    target.context.fillStyle = 'black';
+    target.context.fillStyle = gradient;
     target.context.fill();
     target.maskTexture.needsUpdate = true;
   }

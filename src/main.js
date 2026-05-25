@@ -50,6 +50,20 @@ const player = new Player({
 const raycaster = new THREE.Raycaster();
 const centerPos = new THREE.Vector2(0, 0); // 화면 정중앙
 let isWashing = false;
+const sprayTarget = new THREE.Vector3();
+const maxSprayDistance = 50;
+
+// 업그레이드 시 multiplier만 올리면 세척 반경/스프레이 폭이 같이 커집니다.
+const washRangeConfig = {
+    baseRadius: 30,
+    multiplier: 1,
+};
+
+function getCurrentWashRadius() {
+    return washRangeConfig.baseRadius * washRangeConfig.multiplier;
+}
+
+player.washGun.setSprayFromWashRadius(getCurrentWashRadius());
 
 // 좌클릭을 누르고 있을 때 물을 쏜다고 판정
 window.addEventListener('mousedown', (e) => { if (e.button === 0) isWashing = true; });
@@ -62,21 +76,30 @@ function gameUpdate() {
     const delta = clock.getDelta();
     player.update(delta);
     
+    // 커서 기준 물줄기 타겟 계산 (히트가 없으면 전방 고정 거리)
+    raycaster.setFromCamera(centerPos, camera);
+    sprayTarget.copy(raycaster.ray.origin).addScaledVector(raycaster.ray.direction, maxSprayDistance);
 
     // 물을 쏘고 있을 때의 충돌(때 지우기) 연산
-    if (isWashing) {
-        raycaster.setFromCamera(centerPos, camera); // 화면 정중앙에서 광선을 쏨
+    if (isWashing && player.washGun.waterFillLevel > 0) {
+        player.washGun.waterFillLevel = Math.max(0, player.washGun.waterFillLevel - delta * 0.50);
 
         const washMeshes = muscle_car?.getWashMeshes() ?? [];
         const intersects = raycaster.intersectObjects(washMeshes, false);
-        
+
         if (intersects.length > 0) {
             const hit = intersects[0];
-            if (hit.uv) {
-                muscle_car.wash(hit);
-            }
+            sprayTarget.copy(hit.point);
+            const currentWashRadius = getCurrentWashRadius();
+            player.washGun.setSprayFromWashRadius(currentWashRadius);
+            muscle_car.wash(hit, currentWashRadius);
         }
     }
+
+    player.washGun.updateWaterStream(
+        isWashing && player.washGun.waterFillLevel > 0,
+        sprayTarget
+    );
 
     stats.update();
     renderer.render(scene, camera);

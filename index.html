@@ -16,10 +16,20 @@
 </head>
 <body>
     <div id="cursor"></div>
+
+    <!-- 게임 화면을 가리는 UI 팝업 (예: 일시정지 메뉴) -->
     <div id="menu" class="ui-popup">
-        <button id="menu-close-btn" type="button">X</button>
-        Menu
+        <h2 id="menu-title" class="menu-title">PAUSE</h2>
+
+        <div id="menu-volume-panel" class="menu-volume-panel">
+            <label for="master-volume" class="menu-label">Master Volume</label>
+            <div class="menu-volume-row">
+                <input id="master-volume" class="menu-volume-slider" type="range" min="0" max="100" value="70">
+                <span id="master-volume-value" class="menu-volume-value">70%</span>
+            </div>
+        </div>
     </div>
+
     <script type="module" src="./src/main.js"></script>
 </body>
 </html>

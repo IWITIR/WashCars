@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { collisionPlayer } from './CollisionGroup.js';
+import { WashGun } from './WashGun.js';
 
 export class Player {
     constructor({scene,
@@ -22,6 +23,7 @@ export class Player {
         this.gravity = world.gravity.y * 4.0; // 기존 대비 2배 빠른 점프를 위해 중력은 4배
         this.jumpCutMultiplier = 0.45; // 점프 중 키를 떼면 상승 속도를 즉시 줄여 짧은 점프 구현
         this.velocity = new THREE.Vector3();
+        this.crouching = false; // 앉기 상태 플래그
         
         // 캡슐 형태의 콜라이더 
         const halfHeight = 8;
@@ -45,11 +47,15 @@ export class Player {
 
         // --- 3. Three.js 시점 제어 (PointerLock) ---
         this.controls = new PointerLockControls(this.camera, renderer.domElement);
+        // 앉아있는 경우를 고려해 눈높이 조정 (기본적으로 캡슐 상단 근처)
         this.camera.position.set(startPos.x, startPos.y + this.eyeHeightOffset, startPos.z);
 
         // --- 4. 키보드 입력 상태 ---
         this.moveState = { forward: false, backward: false, left: false, right: false };
         this.isJumping = false;
+
+        // --- 5. WashGun 세팅 ---
+        this.washGun = new WashGun({ player: this });
 
         this._initInput();
     }
@@ -81,11 +87,19 @@ export class Player {
         window.addEventListener('keydown', (e) => {
             switch (e.code) {
                 case 'KeyW': this.moveState.forward = true;
-                console.log('forward'); 
-                break;
-                case 'KeyS': this.moveState.backward = true; break;
-                case 'KeyA': this.moveState.left = true; break;
-                case 'KeyD': this.moveState.right = true; break;
+                    break;
+                case 'KeyS': 
+                    this.moveState.backward = true; 
+                    break;
+                case 'KeyA': 
+                    this.moveState.left = true; 
+                    break;
+                case 'KeyD': 
+                    this.moveState.right = true; 
+                    break;
+                case 'KeyR':
+                    this.washGun?.reload();
+                    break;
                 case 'Space': 
                     // 바닥에 닿아있을 때만 점프 허용
                     if (this.characterController.computedGrounded()) {
@@ -95,6 +109,18 @@ export class Player {
                 case 'ShiftLeft':
                     // Shift 키를 누르면 이동 속도가 2배 빨라짐 (달리기)
                     this.speedMultiplier = 2;
+                    break;
+                case 'KeyC':
+                    // C 키를 누르면 앉기 토글
+                    if (this.crouching) {
+                        // 일어서기
+                        this.crouching = false;
+                        this.speedMultiplier = 1.0;
+                    } else {
+                        // 앉기
+                        this.crouching = true;
+                        this.speedMultiplier = 0.5;
+                    }
                     break;
             }
         });
@@ -115,12 +141,13 @@ export class Player {
                     // Shift 키에서 손을 떼면 이동 속도 원래대로
                     this.speedMultiplier = 1;
                     break;
-            }
+                }
         });
 
         // 마우스 락
         this.mouseCanLock = true; // 초기에는 마우스 잠금 허용 상태
         this.menuPopup = document.getElementById('menu');
+        this.menuVolumePanel = document.getElementById('menu-volume-panel');
         this.menuOpen = false; // 메뉴는 기본적으로 닫혀있음
 
         window.addEventListener('click', () => {
@@ -128,9 +155,11 @@ export class Player {
                 this.control_lock();
             }
         });
-        // 메뉴 닫기버튼시에도 자동 락
-        this.menuCloseBtn = document.getElementById('menu-close-btn');
-        this.menuCloseBtn.addEventListener('click', () => {
+
+        this.menuPopup.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (this.menuVolumePanel.contains(e.target)) return;
+
             this.menuPopup.classList.remove('show');
             this.menuOpen = false;
             this.control_lock();
@@ -143,6 +172,8 @@ export class Player {
 
     // 매 프레임마다 호출되어야 하는 업데이트 함수
     update(delta) {
+        this.washGun?.update(delta);
+
         if (!this.controls.isLocked) return; // 게임 중지 상태면 안 움직임
 
         // --- [A] 키보드 입력으로 목표 이동 벡터 계산 ---
@@ -191,7 +222,8 @@ export class Player {
         // 물리 바디 이동
         this.rigidBody.setNextKinematicTranslation(nextPos);
         
-        // 카메라는 물리 바디의 눈높이에 따라감
-        this.camera.position.set(nextPos.x, nextPos.y + this.eyeHeightOffset, nextPos.z);
+        // 카메라는 물리 바디의 눈높이에 따라감. 앉기 상태에 따라 눈높이 조정
+        const eyeHeight = this.crouching ? this.eyeHeightOffset * 0.5 : this.eyeHeightOffset;
+        this.camera.position.set(nextPos.x, nextPos.y + eyeHeight, nextPos.z);
     }
 }

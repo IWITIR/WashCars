@@ -1,6 +1,6 @@
 :root {
     --color-bg-app: #222222;
-    --color-ui-popup-bg: rgba(46, 151, 238, 0.8);
+    --color-ui-popup-bg: rgba(0, 0, 0, 0.55);
     --color-ui-popup-text: #ffffff;
 }
 
@@ -35,23 +35,31 @@ canvas {
 }
 
 .ui-popup {
-    position: absolute;       
-    top: 50%;                 
-    left: 50%;               
-    transform: translate(-50%, -50%); 
-    
-    background-color: var(--color-ui-popup-bg); 
-    color: var(--color-ui-popup-text);          
-    padding: 20px 40px;
-    border: 1px solid var(--color-ui-popup-text);
-    border-radius: 8px;
-    font-family: 'Arial', sans-serif;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    transform: none;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 46px;
+
+    background-color: var(--color-ui-popup-bg);
+    color: var(--color-ui-popup-text);
+    font-family: Arial, sans-serif;
     font-weight: bold;
     text-align: center;
-    pointer-events: none;     /* 마우스 클릭이 팝업을 뚫고 캔버스로 가도록 허용 */
-    z-index: 100;             /* WebGL 캔버스보다 무조건 위에 오도록 설정 */
-    
-    /* 애니메이션용 초기 상태 (숨김) */
+
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+
+    pointer-events: none;
+    z-index: 100;
+
     opacity: 0;
     transition: opacity 0.75s ease-in-out;
 }
@@ -60,4 +68,36 @@ canvas {
 .ui-popup.show {
     pointer-events: auto; /* 팝업이 보이는 동안에는 클릭 가능 */
     opacity: 1;
+}
+
+
+.menu-volume-panel {
+    display: grid;
+    width: min(86vw, 460px);
+    gap: 14px;
+    padding: 22px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 8px;
+    background: rgba(18, 21, 27, 0.84);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.42);
+    text-align: left;
+}
+
+
+.menu-volume-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+}
+
+.menu-volume-slider {
+    width: 100%;
+    accent-color: #4ec3ff;
+}
+
+.menu-volume-value {
+    min-width: 42px;
+    text-align: right;
+    font-size: 14px;
 }
