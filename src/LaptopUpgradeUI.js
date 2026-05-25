@@ -64,6 +64,34 @@ export class LaptopUpgradeUI {
         return true;
     }
 
+    isHit(raycaster) {
+        if (!this.panel) return false;
+
+        return raycaster.intersectObject(this.panel, false).length > 0;
+    }
+
+    placeCamera(camera, referenceCamera = null) {
+        if (!this.panel) return false;
+
+        this.panel.updateWorldMatrix(true, false);
+
+        const center = new THREE.Vector3();
+        const normal = new THREE.Vector3(0, 0, 1);
+        const quaternion = new THREE.Quaternion();
+
+        this.panel.getWorldPosition(center);
+        this.panel.getWorldQuaternion(quaternion);
+        normal.applyQuaternion(quaternion).normalize();
+
+        if (referenceCamera && normal.dot(referenceCamera.position.clone().sub(center)) < 0) {
+            normal.multiplyScalar(-1);
+        }
+
+        camera.position.copy(center).addScaledVector(normal, 7);
+        camera.lookAt(center);
+        return true;
+    }
+
     buyUpgrade(levelKey) {
         if (this[levelKey] >= this.maxUpgradeLevel) return;
 

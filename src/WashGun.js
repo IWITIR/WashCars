@@ -262,7 +262,7 @@ export class WashGun {
     }
 
     updateWaterStream(isActive, targetPoint) {
-        if (!this.streamGroup || !this.streamConeMesh || !this.streamSprayPoints) {
+        if (!this.muzzlePoint || !this.streamGroup || !this.streamConeMesh || !this.streamSprayPoints) {
             return;
         }
 
@@ -271,16 +271,8 @@ export class WashGun {
             return;
         }
 
-        if (this.muzzlePoint == null) {
-            return;
-        }
-
         const muzzleWorldPos = new THREE.Vector3();
         this.muzzlePoint.getWorldPosition(muzzleWorldPos);
-        if (!muzzleWorldPos) {
-            this.streamGroup.visible = false;
-            return;
-        }
         this.streamStart.copy(muzzleWorldPos);
         this.streamEnd.copy(targetPoint);
         this.streamDirection.subVectors(this.streamEnd, this.streamStart);

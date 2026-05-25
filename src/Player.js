@@ -68,31 +68,12 @@ export class Player {
         this._initInput();
     }
 
-    // 보안정책 때문에 락 해제 후 1.5초 쿨다운동안은 바로 락이 안됨
-    control_lock() {
-        if (this.mouseCanLock) {
-            this.controls.lock();
-        } else {
-            console.log('Mouse lock is temporarily disabled due to recent unlock. Please wait a moment before trying again.');
-        }
-    }
-
-    control_unlock() {
-        console.log('mouse unlock requested: menu open');
-        this.menuPopup.classList.add('show');
-        this.menuOpen = true; // 메뉴가 열렸다고 상태 업데이트
-        this.mouseCanLock = false; // 마우스가 풀리면 즉시 잠금 차단
-
-        // 브라우저 쿨다운(1.5초)이 지나면 다시 잠금 허용
-        setTimeout(() => {
-            this.mouseCanLock = true;
-        }, 1500);
-    }
-
     _initInput() {
 
         // 이동 관련
         window.addEventListener('keydown', (e) => {
+            if (!this.inputEnabled) return;
+
             switch (e.code) {
                 case 'KeyW': this.moveState.forward = true;
                     break;
@@ -136,6 +117,8 @@ export class Player {
         });
 
         window.addEventListener('keyup', (e) => {
+            if (!this.inputEnabled) return;
+
             switch (e.code) {
                 case 'KeyW': this.moveState.forward = false; break;
                 case 'KeyS': this.moveState.backward = false; break;
@@ -154,37 +137,30 @@ export class Player {
                 }
         });
 
-        // 마우스 락
-        this.mouseCanLock = true; // 초기에는 마우스 잠금 허용 상태
-        this.menuPopup = document.getElementById('menu');
-        this.menuVolumePanel = document.getElementById('menu-volume-panel');
-        this.menuOpen = false; // 메뉴는 기본적으로 닫혀있음
+        this.inputEnabled = true;
+    }
 
-        window.addEventListener('click', () => {
-            if (!this.controls.isLocked && !this.menuOpen) {
-                this.control_lock();
-            }
-        });
+    setInputEnabled(isEnabled) {
+        this.inputEnabled = isEnabled;
 
-        this.menuPopup.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (this.menuVolumePanel.contains(e.target)) return;
+        if (isEnabled) {
+            return;
+        }
 
-            this.menuPopup.classList.remove('show');
-            this.menuOpen = false;
-            this.control_lock();
-        });
-
-        this.controls.addEventListener('unlock', () => {
-            this.control_unlock();
-        });
+        // 입력 비활성화
+        this.moveState.forward = false;
+        this.moveState.backward = false;
+        this.moveState.left = false;
+        this.moveState.right = false;
+        this.speedMultiplier = 1;
+        this.velocity.set(0, 0, 0);
     }
 
     // 매 프레임마다 호출되어야 하는 업데이트 함수
     update(delta) {
         this.washGun?.update(delta);
 
-        if (!this.controls.isLocked) return; // 게임 중지 상태면 안 움직임
+        if (!this.inputEnabled) return;
 
         // --- [A] 키보드 입력으로 목표 이동 벡터 계산 ---
         const moveDir = this.camera.getWorldDirection(new THREE.Vector3());
