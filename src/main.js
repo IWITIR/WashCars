@@ -122,6 +122,10 @@ function gameUpdate() {
         sprayTarget
     );
 
+    for (const model of washableModels) {
+        model.update(delta, camera);
+    }
+
     stats.update();
     renderer.render(scene, camera);
     world.step(); // 물리 시뮬레이션 한 스텝 진행
