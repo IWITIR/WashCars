@@ -1,17 +1,20 @@
 import * as THREE from 'three';
 
 export class AudioManager {
-    constructor({ camera, defaultVolume = 0.5 } = {}) {
+    constructor({ camera, defaultVolume = 0.5, masterVolume = 1 } = {}) {
         if (!camera) {
             throw new Error('AudioManager requires a camera.');
         }
 
         this.camera = camera;
         this.defaultVolume = defaultVolume;
+        this.masterVolume = masterVolume; // html에서 연동
         this.listener = new THREE.AudioListener();
         this.loader = new THREE.AudioLoader();
         this.sounds = new Map();
+        this.soundVolumes = new Map();
 
+        this.listener.setMasterVolume(this.masterVolume);
         this.camera.add(this.listener);
     }
 
@@ -28,6 +31,7 @@ export class AudioManager {
 
         sound.setBuffer(buffer);
         sound.setLoop(loop);
+        this.soundVolumes.set(name, volume);
         sound.setVolume(volume);
 
         if (positional) {
@@ -59,7 +63,7 @@ export class AudioManager {
         sound.play();
     }
 
-    playOneShot(name, { volume = null } = {}) {
+    playOneShot(name) {
         const source = this.get(name);
         if (!source?.buffer) return;
 
@@ -68,7 +72,7 @@ export class AudioManager {
         const sound = new THREE.Audio(this.listener);
         sound.setBuffer(source.buffer);
         sound.setLoop(false);
-        sound.setVolume(volume ?? source.getVolume());
+        sound.setVolume(this.getVolume(name));
 
         const playSound = () => {
             sound.play();
@@ -100,11 +104,13 @@ export class AudioManager {
         sound.pause();
     }
 
-    setVolume(name, volume) {
-        const sound = this.get(name);
-        if (!sound) return;
+    setMasterVolume(volume) {
+        this.masterVolume = THREE.MathUtils.clamp(volume, 0, 1);
+        this.listener.setMasterVolume(this.masterVolume);
+    }
 
-        sound.setVolume(volume);
+    getVolume(name) {
+        return this.soundVolumes.get(name) ?? this.defaultVolume;
     }
 
     setLoop(name, loop) {

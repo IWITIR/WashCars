@@ -36,6 +36,21 @@ const { washableModels } = loadModels({ scene, world });
 
 // 사운드 세팅
 const audioManager = await loadSounds(camera);
+// 볼륨 슬라이더
+const masterVolumeSlider = document.getElementById('master-volume');
+const masterVolumeValue = document.getElementById('master-volume-value');
+
+if (masterVolumeSlider && masterVolumeValue) {
+    const updateMasterVolume = () => {
+        const volume = Number(masterVolumeSlider.value) / 100;
+        audioManager.setMasterVolume(volume);
+        masterVolumeValue.textContent = `${masterVolumeSlider.value}%`;
+    };
+
+    // Init
+    masterVolumeSlider.addEventListener('input', updateMasterVolume);
+    updateMasterVolume();
+}
 
 // 플레이어 세팅
 const player = new Player({
