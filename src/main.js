@@ -4,6 +4,7 @@ import { Player } from './Player.js';
 import { loadModels } from './LoadModels.js';
 import { setupLighting } from './SetupLighting.js';
 import { loadSounds } from './LoadSounds.js';
+import { LaptopUpgradeUI } from './LaptopUpgradeUI.js';
 import * as Collision from './CollisionGroup.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 
@@ -32,7 +33,7 @@ const gravity = { x: 0, y: -30, z: 0 }; // 중력은 플레이적으로 조율�
 const world = new RAPIER.World(gravity);
 
 // 모델 임포트
-const { washableModels } = loadModels({ scene, world });
+const { laptop_scrn, washableModels } = loadModels({ scene, world });
 
 // 사운드 세팅
 const audioManager = await loadSounds(camera);
@@ -70,15 +71,27 @@ let isWashing = false;
 const sprayTarget = new THREE.Vector3();
 const maxSprayDistance = 50;
 
-// 업그레이드 시 multiplier만 올리면 세척 반경/스프레이 폭이 같이 커집니다.
-const washRangeConfig = {
-    baseRadius: 30,
-    multiplier: 1,
-};
+const laptopUpgradeUI = new LaptopUpgradeUI({
+    laptopScreen: laptop_scrn,
+});
+
+function getCurrentWashRadius() {
+    return 30;
+}
 
 
 // 좌클릭을 누르고 있을 때 물을 쏜다고 판정
-window.addEventListener('mousedown', (e) => { if (e.button === 0) isWashing = true; });
+window.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+
+    raycaster.setFromCamera(centerPos, camera);
+    if (laptopUpgradeUI.handleClick(raycaster)) {
+        isWashing = false;
+        return;
+    }
+
+    isWashing = true;
+});
 window.addEventListener('mouseup', (e) => { if (e.button === 0) isWashing = false; });
 
 // 4. 게임 메인 루프
@@ -106,7 +119,7 @@ function gameUpdate() {
 
             if (washableModel) {
                 sprayTarget.copy(hit.point);
-                washableModel.wash(hit, washRangeConfig.baseRadius);
+                washableModel.wash(hit, getCurrentWashRadius());
                 audioManager.play('water_hit', { position: hit.point });
             }
         } else {
@@ -125,6 +138,7 @@ function gameUpdate() {
     for (const model of washableModels) {
         model.update(delta, camera);
     }
+    laptopUpgradeUI.update();
 
     stats.update();
     renderer.render(scene, camera);

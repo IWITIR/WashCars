@@ -40,7 +40,7 @@ export class WashGun {
         this.streamSprayPoints = null;
         this.streamSprayPositions = null;
         this.streamSpraySeeds = null;
-        this.streamSprayCount = 200;
+        this.streamSprayCount = 50;
         this.baseWashRadius = 30;
         this.streamWidthScale = 1;
         this.baseSpraySize = 0.072;
@@ -268,6 +268,10 @@ export class WashGun {
 
         if (!isActive || !targetPoint) {
             this.streamGroup.visible = false;
+            return;
+        }
+
+        if (this.muzzlePoint == null) {
             return;
         }
 

@@ -73,6 +73,7 @@ export function loadModels({ scene, world }) {
 
     return {
         muscle_car,
+        laptop_scrn,
         washableModels: [muscle_car],
     };
 }
