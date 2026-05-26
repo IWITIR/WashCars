@@ -9,6 +9,7 @@ import { CameraManager } from './CameraManager.js';
 import { WashGun } from './WashGun.js';
 import { MoneyUI } from './ui/MoneyUI.js';
 import { InstructionUI } from './ui/InstructionUI.js';
+import { MoneyEffect } from './ui/MoneyEffect.js';
 import * as Collision from './CollisionGroup.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 
@@ -83,6 +84,7 @@ const laptopUpgradeUI = new LaptopUpgradeUI({
 });
 const moneyUI = new MoneyUI({ camera });
 const instructionUI = new InstructionUI({ camera });
+const moneyEffect = new MoneyEffect({ scene });
 
 
 function getCurrentWashRadius() {
@@ -133,6 +135,7 @@ function gameUpdate() {
     player.update(delta, cameraManager.viewQuaternion);
     cameraManager.update(delta);
     washGun.update(delta);
+    moneyEffect.update(delta);
 
     // 커서 기준 물줄기 타겟 계산 (히트가 없으면 전방 고정 거리)
     raycaster.setFromCamera(centerPos, camera);
@@ -152,7 +155,8 @@ function gameUpdate() {
 
             if (washableModel) {
                 sprayTarget.copy(hit.point);
-                washableModel.wash(hit, getCurrentWashRadius());
+                const cleanedAmount = washableModel.wash(hit, getCurrentWashRadius());
+                moneyEffect.trySpawn(hit.point, cleanedAmount);
                 audioManager.play('water_hit', { position: hit.point });
             }
         } else {

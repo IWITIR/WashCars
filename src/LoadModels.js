@@ -67,6 +67,7 @@ export function loadModels({ scene, world }) {
             depthWrite: true,
             alphaTest: 0,
         }),
+        
     });
     muscle_car.rescale(6.0);
     scene.add(muscle_car.group);

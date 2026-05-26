@@ -140,7 +140,10 @@ export class WashableModel extends Model {
         target.maskTexture.needsUpdate = true;
 
         const dirtyAfter = this.measureDirtyAmount(target, x, y, radius);
-        this.addCleanScore(Math.max(0, dirtyBefore - dirtyAfter));
+        const cleanedAmount = Math.max(0, dirtyBefore - dirtyAfter);
+        this.addCleanScore(cleanedAmount);
+        
+        return cleanedAmount;
     }
 
     // 수정된 범위의 dirty 정도를 계산하여 반환합니다.
