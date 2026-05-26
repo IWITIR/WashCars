@@ -7,6 +7,7 @@ import { loadSounds } from './LoadSounds.js';
 import { LaptopUpgradeUI } from './LaptopUpgradeUI.js';
 import { CameraManager } from './CameraManager.js';
 import { WashGun } from './WashGun.js';
+import { MoneyUI } from './MoneyUI.js';
 import * as Collision from './CollisionGroup.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 
@@ -18,6 +19,7 @@ document.body.appendChild(stats.dom);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 0, 2);
+scene.add(camera);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -74,9 +76,11 @@ const maxSprayDistance = 50;
 const menuPopup = document.getElementById('menu');
 const menuVolumePanel = document.getElementById('menu-volume-panel');
 
+// 3. UI 세팅
 const laptopUpgradeUI = new LaptopUpgradeUI({
     laptopScreen: laptop_scrn,
 });
+const moneyUI = new MoneyUI({ camera });
 
 
 function getCurrentWashRadius() {
@@ -177,6 +181,7 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    moneyUI.updateLayout();
 });
 
 gameUpdate();
