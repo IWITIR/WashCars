@@ -1,21 +1,15 @@
 import * as THREE from 'three';
-import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { collisionPlayer } from './CollisionGroup.js';
-import { WashGun } from './WashGun.js';
 
+// Rapier의 KinematicPositionBased 바디를 사용하여 플레이어 이동과 점프를 구현합니다.
 export class Player {
     constructor({
-        scene,
-        camera,
-        renderer,
         world,
         audioManager = null,
         startPos = { x: 0, y: 0, z: 0 },
         collisionGroups = collisionPlayer
     }) {
-        this.scene = scene;
-        this.camera = camera;
         this.world = world;
         this.audioManager = audioManager;
 
@@ -37,6 +31,7 @@ export class Player {
         // 캐릭터는 중력에 의해 마구 굴러가면 안 되므로 'KinematicPositionBased'를 사용합니다.
         const rigidBodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(startPos.x, startPos.y + halfHeight, startPos.z);
         this.rigidBody = this.world.createRigidBody(rigidBodyDesc);
+        this.eyePosition = new THREE.Vector3(startPos.x, startPos.y + this.eyeHeightOffset, startPos.z);
 
         const colliderDesc = RAPIER.ColliderDesc.capsule(halfHeight, radius)
             .setCollisionGroups(collisionGroups);
@@ -48,12 +43,7 @@ export class Player {
         // 계단 오르기 허용 (높이 0.5 이하의 턱은 자동으로 부드럽게 올라감)
         this.characterController.enableAutostep(0.5, 0.2, true);
 
-        // --- 3. Three.js 시점 제어 (PointerLock) ---
-        this.controls = new PointerLockControls(this.camera, renderer.domElement);
-        // 앉아있는 경우를 고려해 눈높이 조정 (기본적으로 캡슐 상단 근처)
-        this.camera.position.set(startPos.x, startPos.y + this.eyeHeightOffset, startPos.z);
-
-        // --- 4. 키보드 입력 상태 ---
+        // --- 3. 키보드 입력 상태 ---
         this.moveState = { forward: false, backward: false, left: false, right: false };
         this.isJumping = false;
         this.footstepTimer = 0;
@@ -61,9 +51,6 @@ export class Player {
         this.walkStepInterval = 0.45;
         this.runStepInterval = 0.24;
         this.crouchStepInterval = 0.65;
-
-        // --- 5. WashGun 세팅 ---
-        this.washGun = new WashGun({ player: this });
 
         this._initInput();
     }
@@ -85,11 +72,6 @@ export class Player {
                     break;
                 case 'KeyD':
                     this.moveState.right = true;
-                    break;
-                case 'KeyR':
-                    if (this.washGun?.reload()) {
-                        this.audioManager?.playOneShot('reload');
-                    }
                     break;
                 case 'Space':
                     // 바닥에 닿아있을 때만 점프 허용
@@ -157,22 +139,19 @@ export class Player {
     }
 
     // 매 프레임마다 호출되어야 하는 업데이트 함수
-    update(delta) {
-        this.washGun?.update(delta);
-
+    update(delta, viewQuaternion) {
         if (!this.inputEnabled) return;
 
         // --- [A] 키보드 입력으로 목표 이동 벡터 계산 ---
-        const moveDir = this.camera.getWorldDirection(new THREE.Vector3());
-        moveDir.z = Number(this.moveState.backward) - Number(this.moveState.forward);
-        moveDir.x = Number(this.moveState.right) - Number(this.moveState.left);
+        const moveDir = new THREE.Vector3(
+            Number(this.moveState.right) - Number(this.moveState.left),
+            0,
+            Number(this.moveState.backward) - Number(this.moveState.forward)
+        );
         moveDir.normalize(); // 대각선 이동 시 빨라짐 방지
 
-        // 카메라가 바라보는 방향을 기준으로 로컬 벡터를 월드 벡터로 변환
-        const camQuat = new THREE.Quaternion();
-        camQuat.copy(this.camera.quaternion);
-        // Y축(상하) 회전은 무시하고 바닥(XZ평면) 방향만 추출
-        const euler = new THREE.Euler().setFromQuaternion(camQuat, 'YXZ');
+        // 화면 회전값 중 Y축 회전만 이동 방향에 사용합니다.
+        const euler = new THREE.Euler().setFromQuaternion(viewQuaternion, 'YXZ');
         euler.x = 0; euler.z = 0;
         moveDir.applyEuler(euler);
         moveDir.multiplyScalar(this.speed * this.speedMultiplier * delta);
@@ -208,11 +187,15 @@ export class Player {
         // 물리 바디 이동
         this.rigidBody.setNextKinematicTranslation(nextPos);
 
-        // 카메라는 물리 바디의 눈높이에 따라감. 앉기 상태에 따라 눈높이 조정
+        // 눈 위치는 CameraManager가 참조합니다.
         const eyeHeight = this.crouching ? this.eyeHeightOffset * 0.5 : this.eyeHeightOffset;
-        this.camera.position.set(nextPos.x, nextPos.y + eyeHeight, nextPos.z);
+        this.eyePosition.set(nextPos.x, nextPos.y + eyeHeight, nextPos.z);
 
         this.updateFootsteps(delta);
+    }
+
+    getEyePosition() {
+        return this.eyePosition;
     }
 
     updateFootsteps(delta) {

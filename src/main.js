@@ -5,7 +5,8 @@ import { loadModels } from './LoadModels.js';
 import { setupLighting } from './SetupLighting.js';
 import { loadSounds } from './LoadSounds.js';
 import { LaptopUpgradeUI } from './LaptopUpgradeUI.js';
-import { GameMode } from './GameMode.js';
+import { CameraManager } from './CameraManager.js';
+import { WashGun } from './WashGun.js';
 import * as Collision from './CollisionGroup.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 
@@ -56,14 +57,12 @@ if (masterVolumeSlider && masterVolumeValue) {
 
 // 플레이어 세팅
 const player = new Player({
-    scene,
-    camera,
-    renderer,
     world,
     startPos: new THREE.Vector3(30, 8, 5), // 플레이어 시작 위치 (원점에서 약간 뒤쪽)
     collisionGroups: Collision.collisionPlayer,
     audioManager,
 });
+const washGun = new WashGun({ player, camera, scene });
 
 // 2. 레이캐스터 (수압 총) 세팅
 const raycaster = new THREE.Raycaster();
@@ -85,15 +84,16 @@ function getCurrentWashRadius() {
 }
 
 // 게임 모드 세팅 (플레이어 조작 모드, 랩탑 UI 모드, 일시정지 모드)
-const gameMode = new GameMode({
+const cameraManager = new CameraManager({
     scene,
     player,
-    worldCamera: camera,
+    camera,
+    domElement: renderer.domElement,
+    washGun,
     laptopUpgradeUI,
     menuPopup,
     menuVolumePanel,
     audioManager,
-    aspect: window.innerWidth / window.innerHeight,
     onStopWashing: () => {
         isWashing = false;
     },
@@ -102,7 +102,7 @@ const gameMode = new GameMode({
 window.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
 
-    if (!gameMode.handlePrimaryMouseDown(raycaster, centerPos, mousePos)) {
+    if (!cameraManager.handlePrimaryMouseDown(raycaster, centerPos, mousePos)) {
         isWashing = false;
         return;
     }
@@ -110,28 +110,24 @@ window.addEventListener('mousedown', (e) => {
     isWashing = true;
 });
 window.addEventListener('mouseup', (e) => { if (e.button === 0) isWashing = false; });
-window.addEventListener('mousemove', (e) => {
-    mousePos.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mousePos.y = -(e.clientY / window.innerHeight) * 2 + 1;
-});
-window.addEventListener('keydown', () => {
-    gameMode.exitLaptop();
-});
+
 
 // 4. 게임 메인 루프
 function gameUpdate() {
     requestAnimationFrame(gameUpdate);
 
     const delta = clock.getDelta();
-    player.update(delta);
+    player.update(delta, cameraManager.viewQuaternion);
+    cameraManager.update();
+    washGun.update(delta);
 
     // 커서 기준 물줄기 타겟 계산 (히트가 없으면 전방 고정 거리)
     raycaster.setFromCamera(centerPos, camera);
     sprayTarget.copy(raycaster.ray.origin).addScaledVector(raycaster.ray.direction, maxSprayDistance);
 
     // 물을 쏘고 있을 때의 충돌(때 지우기) 연산
-    if (gameMode.isWorld() && isWashing && player.washGun.waterFillLevel > 0) {
-        player.washGun.waterFillLevel = Math.max(0, player.washGun.waterFillLevel - delta * 0.50);
+    if (cameraManager.mode === 'world' && isWashing && washGun.waterFillLevel > 0) {
+        washGun.waterFillLevel = Math.max(0, washGun.waterFillLevel - delta * 0.50);
         audioManager.play('water_hose', { position: player.rigidBody.translation() });
 
         const washMeshes = washableModels.flatMap((model) => model.getWashMeshes());
@@ -154,19 +150,18 @@ function gameUpdate() {
         audioManager.stop('water_hit');
     }
 
-    player.washGun.updateWaterStream(
-        gameMode.isWorld() && isWashing && player.washGun.waterFillLevel > 0,
+    washGun.updateWaterStream(
+        cameraManager.mode === 'world' && isWashing && washGun.waterFillLevel > 0,
         sprayTarget
     );
 
-    const activeCamera = gameMode.getActiveCamera();
     for (const model of washableModels) {
-        model.update(delta, activeCamera);
+        model.update(delta, cameraManager.camera);
     }
     laptopUpgradeUI.update();
 
     stats.update();
-    renderer.render(scene, activeCamera);
+    renderer.render(scene, cameraManager.camera);
     world.step(); // 물리 시뮬레이션 한 스텝 진행
 }
 
@@ -174,7 +169,6 @@ function gameUpdate() {
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    gameMode.resize(window.innerWidth / window.innerHeight);
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 

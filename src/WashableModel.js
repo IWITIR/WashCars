@@ -64,12 +64,15 @@ export class WashableModel extends Model {
         canvas.width = this.maskSize;
         canvas.height = this.maskSize;
 
-        const context = canvas.getContext('2d');
+        // dirt overlay마다 canvas와 context를 생성합니다.
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        // willReadFrequently 옵션은 최적화를 위해 추천됨.
         if (!context) return null;
 
         context.fillStyle = 'white';
         context.fillRect(0, 0, this.maskSize, this.maskSize);
 
+        // canvas 기반으로 Three.js의 texture를 생성합니다.
         const maskTexture = new THREE.CanvasTexture(canvas);
         maskTexture.flipY = false;
 
@@ -94,6 +97,7 @@ export class WashableModel extends Model {
         dirtMesh.raycast = THREE.Mesh.prototype.raycast;
         dirtMesh.washableModel = this;
 
+        // 원본 메시, dirt 메시, canvas, context, texture를 가지는 객체를 반환합니다.
         return {
             sourceMesh,
             mesh: dirtMesh,
@@ -107,6 +111,10 @@ export class WashableModel extends Model {
         return this.washTargets.map((target) => target.mesh);
     }
 
+    // main.js에서 raycast 결과 hit을 전달합니다.
+    // hit에는 uv 정보가 포함되어 있습니다.
+    // canvas를 hit의 uv정보에 기반하여 수정하고, texture를 업데이트합니다.
+    // dirty 정도를 계산하여 wash progress를 업데이트합니다.
     wash(hit, radius = this.washRadius) {
         if (!hit?.object || !hit.uv) return;
 
@@ -116,23 +124,26 @@ export class WashableModel extends Model {
         const x = hit.uv.x * this.maskSize;
         const y = hit.uv.y * this.maskSize;
         const strength = Math.min(Math.max(this.washStrength, 0), 1);
+        // 가장자리가 부드러운 원 모양으로 지워질 수 있게 그라데이션을 사용합니다.
         const gradient = target.context.createRadialGradient(x, y, 0, x, y, radius);
         const dirtyBefore = this.measureDirtyAmount(target, x, y, radius);
 
+        // 그라데이션 정보 설정
         gradient.addColorStop(0, `rgba(0, 0, 0, ${strength})`);
         gradient.addColorStop(0.65, `rgba(0, 0, 0, ${strength * 0.7})`);
         gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-        target.context.beginPath();
-        target.context.arc(x, y, radius, 0, Math.PI * 2);
+        target.context.beginPath(); // 그리기 시작 (path 초기화)
+        target.context.arc(x, y, radius, 0, Math.PI * 2); // (x, y) 중심의 원 그리기
         target.context.fillStyle = gradient;
-        target.context.fill();
+        target.context.fill(); // 그라데이션으로 원 내부를 채우기
         target.maskTexture.needsUpdate = true;
 
         const dirtyAfter = this.measureDirtyAmount(target, x, y, radius);
         this.addCleanScore(Math.max(0, dirtyBefore - dirtyAfter));
     }
 
+    // 수정된 범위의 dirty 정도를 계산하여 반환합니다.
     measureDirtyAmount(target, centerX, centerY, radius) {
         const minX = Math.max(0, Math.floor(centerX - radius));
         const maxX = Math.min(this.maskSize - 1, Math.ceil(centerX + radius));
