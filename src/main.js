@@ -112,9 +112,15 @@ window.addEventListener('mousemove', (e) => {
     mousePos.set(e.clientX / window.innerWidth * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
 });
 
+let bgmStarted = false;
+
 // 좌클릭 처리 cameraManager에 전달.
 window.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
+    if (bgmStarted === false) {
+        audioManager.play('bgm');
+        bgmStarted = true;
+    }
 
     if (!cameraManager.handlePrimaryMouseDown(raycaster, centerPos, mousePos)) {
         isWashing = false;

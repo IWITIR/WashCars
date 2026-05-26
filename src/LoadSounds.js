@@ -50,5 +50,13 @@ export async function loadSounds(camera) {
         volume: 0.5,
     });
 
+    await audioManager.load(
+        'bgm',
+        './sound/bgm.wav',
+        {
+        loop: true,
+        volume: 0.3,
+    });
+
     return audioManager;
 }
