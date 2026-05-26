@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 let showHelpers = false;
 
-export function setupLighting(scene) {
+export function setupLighting(scene, camera = null) {
     // 조명 세팅
 
     // 0) 앰비언트 라이트
@@ -23,6 +23,14 @@ export function setupLighting(scene) {
     laptopSpot.target.position.set(55, 0, -100);
     scene.add(laptopSpot);
     scene.add(laptopSpot.target);
+
+    if (camera) {
+        const flashlight = new THREE.SpotLight(0xffffff, 25, 45, Math.PI / 8, 0.45, 1);
+        flashlight.position.set(0, 0, 0);
+        flashlight.target.position.set(0, 0, -1);
+        camera.add(flashlight);
+        camera.add(flashlight.target);
+    }
 
     // 라이팅 헬퍼 (디버그)
     const lightingHelperRoot = new THREE.Group();

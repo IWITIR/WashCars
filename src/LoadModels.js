@@ -67,14 +67,36 @@ export function loadModels({ scene, world }) {
             depthWrite: true,
             alphaTest: 0,
         }),
-        
+
     });
     muscle_car.rescale(6.0);
+    muscle_car.setPosition(0, 0, 10000);
     scene.add(muscle_car.group);
+
+    const dacia = new WashableModel({
+        world,
+        path: './glb/dacia.glb',
+        isHollow: false,
+        collisionGroups: Collision.collisionNone,
+        preserveMaterialMaps: true,
+        // 투명 재질 제거 (에셋 호환 문제)
+        preserveMaterialState: false,
+        materialOverride: () => new THREE.MeshStandardMaterial({
+            side: THREE.FrontSide,
+            transparent: false,
+            opacity: 1,
+            depthWrite: true,
+            alphaTest: 0,
+        }),
+    });
+    dacia.setPosition(0, 0, 0);
+    dacia.setRotation(0, Math.PI / 2, 0);
+    dacia.rescale(18.0);
+    scene.add(dacia.group);
 
     return {
         muscle_car,
         laptop_scrn,
-        washableModels: [muscle_car],
+        washableModels: [muscle_car, dacia],
     };
 }

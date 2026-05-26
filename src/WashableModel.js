@@ -180,6 +180,21 @@ export class WashableModel extends Model {
         this.washProgress = this.cleanScore / this.cleanTargetScore;
     }
 
+    // 진척도 초기화
+    resetWashProgress() {
+        this.cleanScore = 0;
+        this.washProgress = 0;
+        this.progressUpdateTime = 0;
+
+        for (const target of this.washTargets) {
+            target.context.fillStyle = 'white';
+            target.context.fillRect(0, 0, this.maskSize, this.maskSize);
+            target.maskTexture.needsUpdate = true;
+        }
+
+        this.updateProgressFill();
+    }
+
     createProgressBillboard() {
         const box = new THREE.Box3().setFromObject(this.model);
         const center = new THREE.Vector3();
