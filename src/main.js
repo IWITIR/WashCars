@@ -4,11 +4,11 @@ import { Player } from './Player.js';
 import { loadModels } from './LoadModels.js';
 import { setupLighting } from './SetupLighting.js';
 import { loadSounds } from './LoadSounds.js';
-import { LaptopUpgradeUI } from './LaptopUpgradeUI.js';
+import { LaptopUpgradeUI } from './ui/LaptopUpgradeUI.js';
 import { CameraManager } from './CameraManager.js';
 import { WashGun } from './WashGun.js';
-import { MoneyUI } from './MoneyUI.js';
-import { InstructionUI } from './InstructionUI.js';
+import { MoneyUI } from './ui/MoneyUI.js';
+import { InstructionUI } from './ui/InstructionUI.js';
 import * as Collision from './CollisionGroup.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 

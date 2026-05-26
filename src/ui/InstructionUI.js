@@ -41,7 +41,7 @@ export class InstructionUI {
 
         ctx.fillText('세차 알바로 등록금을 벌자!', 28, 35);
         ctx.fillText('WASD 이동', 28, 70);
-        ctx.fillText('Shift 달리기 / Space 점프', 28, 105);
+        ctx.fillText('Shift 달리기 / Space 점프 / C 앉기', 28, 105);
         ctx.fillText('좌클릭 세척 / R 장전', 28, 140);
         ctx.fillText('ESC 일시정지', 28, 175);
 
