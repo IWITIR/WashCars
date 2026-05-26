@@ -42,5 +42,13 @@ export async function loadSounds(camera) {
         volume: 1,
     });
 
+    await audioManager.load(
+        'mouse_click',
+        './sound/mouse_click.wav',
+        {
+        loop: false,
+        volume: 0.5,
+    });
+
     return audioManager;
 }

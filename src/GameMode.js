@@ -9,6 +9,7 @@ export class GameMode {
         laptopUpgradeUI,
         menuPopup,
         menuVolumePanel,
+        audioManager = null,
         aspect,
         onStopWashing = null,
     }) {
@@ -18,6 +19,7 @@ export class GameMode {
         this.laptopUpgradeUI = laptopUpgradeUI;
         this.menuPopup = menuPopup;
         this.menuVolumePanel = menuVolumePanel;
+        this.audioManager = audioManager;
         this.onStopWashing = onStopWashing;
         this.mode = 'world';
         this.mouseCanLock = true;
@@ -59,6 +61,7 @@ export class GameMode {
         }
 
         if (this.mode === 'laptop') {
+            this.audioManager?.playOneShot('mouse_click');
             raycaster.setFromCamera(mousePos, this.laptopCamera);
             this.laptopUpgradeUI.handleClick(raycaster);
             return false;

@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 
 export class LaptopUpgradeUI {
-    constructor({ laptopScreen }) {
+    constructor({ laptopScreen, audioManager }) {
         this.laptopScreen = laptopScreen;
+        this.audioManager = audioManager;
         this.screenMesh = null;
         this.canvas = document.createElement('canvas');
         this.canvas.width = 1024;
@@ -48,6 +49,7 @@ export class LaptopUpgradeUI {
 
         const intersects = raycaster.intersectObject(this.panel, false);
         if (intersects.length === 0 || !intersects[0].uv) return false;
+        this.audioManager?.playOneShot('mouse_click');
 
         const uv = intersects[0].uv;
         const x = uv.x * this.canvas.width;

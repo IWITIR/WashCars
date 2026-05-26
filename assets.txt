@@ -29,3 +29,7 @@ https://freesound.org/people/irfanpipo/sounds/649649/
 reload sound:
 Potion - drink - swallow.wav | freesound.org (CC0)
 https://freesound.org/people/ValentinPetiteau/sounds/574077/
+
+mouse click sound:
+Mouse Click Sound.mp3 | freesound.org (CC0)
+https://freesound.org/people/Pixeliota/sounds/678248/

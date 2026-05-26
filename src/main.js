@@ -77,6 +77,7 @@ const menuVolumePanel = document.getElementById('menu-volume-panel');
 
 const laptopUpgradeUI = new LaptopUpgradeUI({
     laptopScreen: laptop_scrn,
+    audioManager: audioManager,
 });
 
 
@@ -92,6 +93,7 @@ const gameMode = new GameMode({
     laptopUpgradeUI,
     menuPopup,
     menuVolumePanel,
+    audioManager,
     aspect: window.innerWidth / window.innerHeight,
     onStopWashing: () => {
         isWashing = false;
