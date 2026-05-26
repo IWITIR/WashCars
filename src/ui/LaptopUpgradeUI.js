@@ -38,12 +38,12 @@ export class LaptopUpgradeUI {
         this.rewardPerAreaButtonRect = { x: 220, y: 452, width: 232, height: 70 };
         this.completionRewardButtonRect = { x: 572, y: 452, width: 232, height: 70 };
         this.nextPageButtonRect = { x: 886, y: 78, width: 58, height: 58 };
-        this.prevPageButtonRect = { x: 802, y: 78, width: 58, height: 58 };
+        this.prevPageButtonRect = { x: 886, y: 78, width: 58, height: 58 };
 
         this.draw();
     }
 
-    update() {
+    tryInitialize() {
         if (this.isReady || !this.laptopScreen?.isLoaded || !this.laptopScreen.model) return;
 
         this.screenMesh = this.findScreenMesh();
@@ -151,7 +151,9 @@ export class LaptopUpgradeUI {
 
         ctx.fillStyle = '#9db7c4';
         ctx.font = '700 24px Arial';
-        ctx.fillText(`${this.currentPage} / 2`, 796, 114);
+        ctx.textAlign = 'right';
+        ctx.fillText(`${this.currentPage} / 2`, 854, 114);
+        ctx.textAlign = 'left';
 
         if (this.currentPage === 1) {
             this.drawPageButton(ctx, this.nextPageButtonRect, '>');
@@ -204,8 +206,8 @@ export class LaptopUpgradeUI {
         }
 
         ctx.fillStyle = state.canBuy || state.isMaxed ? '#d7f3ff' : '#ff9f8f';
-        ctx.font = '700 20px Arial';
-        ctx.fillText(state.isMaxed ? '가격: -' : `가격: ${state.cost.toLocaleString()}원`, x + 26, y + 224);
+        ctx.font = '700 18px Arial';
+        ctx.fillText(state.isMaxed ? '가격: -' : `${state.cost.toLocaleString()}원`, x + 26, y + 208);
 
         // 버튼 배경
         ctx.fillStyle = state.canBuy ? '#4ec3ff' : '#324754';

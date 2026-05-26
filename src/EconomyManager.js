@@ -5,32 +5,32 @@ export class EconomyManager {
         this.upgrades = {
             cleanPower: {
                 level: 0,
-                maxLevel: 3,
+                maxLevel: 10,
                 baseCost: 30000,
                 costGrowth: 1.55,
             },
             waterTank: {
                 level: 0,
-                maxLevel: 3,
+                maxLevel: 10,
                 baseCost: 25000,
-                costGrowth: 3,
+                costGrowth: 1.2,
             },
             sprayRange: {
                 level: 0,
-                maxLevel: 3,
+                maxLevel: 10,
                 baseCost: 28000,
-                costGrowth: 1.5,
+                costGrowth: 1.4,
             },
             rewardPerArea: {
                 level: 0,
-                maxLevel: 3,
+                maxLevel: 10,
                 baseCost: 45000,
-                costGrowth: 1.65,
+                costGrowth: 2.3,
             },
             completionReward: {
                 level: 0,
-                maxLevel: 3,
-                baseCost: 70000,
+                maxLevel: 10,
+                baseCost: 30000,
                 costGrowth: 2,
             },
         };
@@ -106,7 +106,7 @@ export class EconomyManager {
     calculateWashReward(cleanedAmount) {
         if (!Number.isFinite(cleanedAmount) || cleanedAmount <= 0) return 0;
 
-        const rewardMultiplier = 1 + this.getUpgradeLevel('rewardPerArea') * 0.25;
+        const rewardMultiplier = 1 + this.getUpgradeLevel('rewardPerArea') * 1;
         return Math.max(1, Math.round(cleanedAmount * 60 * rewardMultiplier));
     }
 

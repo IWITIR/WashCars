@@ -186,7 +186,10 @@ function gameUpdate() {
     for (const model of washableModels) {
         model.update(delta, cameraManager.camera);
     }
-    laptopUpgradeUI.update();
+    if (!laptopUpgradeUI.isReady) {
+        laptopUpgradeUI.tryInitialize();
+    }
+    laptopUpgradeUI.draw();
 
     stats.update();
     renderer.render(scene, cameraManager.camera);
