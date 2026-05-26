@@ -22,10 +22,17 @@ export class LaptopUpgradeUI {
         this.cleanPowerLevel = 0;
         this.waterTankLevel = 0;
         this.sprayRangeLevel = 0;
+        this.rewardPerAreaLevel = 0;
+        this.completionRewardLevel = 0;
         this.maxUpgradeLevel = 5;
+        this.currentPage = 1;
         this.cleanPowerButtonRect = { x: 96, y: 452, width: 232, height: 70 };
         this.waterTankButtonRect = { x: 396, y: 452, width: 232, height: 70 };
         this.sprayRangeButtonRect = { x: 696, y: 452, width: 232, height: 70 };
+        this.rewardPerAreaButtonRect = { x: 220, y: 452, width: 232, height: 70 };
+        this.completionRewardButtonRect = { x: 572, y: 452, width: 232, height: 70 };
+        this.nextPageButtonRect = { x: 886, y: 78, width: 58, height: 58 };
+        this.prevPageButtonRect = { x: 802, y: 78, width: 58, height: 58 };
 
         this.draw();
     }
@@ -53,12 +60,22 @@ export class LaptopUpgradeUI {
         const x = uv.x * this.canvas.width;
         const y = (1 - uv.y) * this.canvas.height;
 
-        if (this.isInsideRect(x, y, this.cleanPowerButtonRect)) {
+        if (this.currentPage === 1 && this.isInsideRect(x, y, this.nextPageButtonRect)) {
+            this.currentPage = 2;
+            this.draw();
+        } else if (this.currentPage === 2 && this.isInsideRect(x, y, this.prevPageButtonRect)) {
+            this.currentPage = 1;
+            this.draw();
+        } else if (this.currentPage === 1 && this.isInsideRect(x, y, this.cleanPowerButtonRect)) {
             this.buyUpgrade('cleanPowerLevel');
-        } else if (this.isInsideRect(x, y, this.waterTankButtonRect)) {
+        } else if (this.currentPage === 1 && this.isInsideRect(x, y, this.waterTankButtonRect)) {
             this.buyUpgrade('waterTankLevel');
-        } else if (this.isInsideRect(x, y, this.sprayRangeButtonRect)) {
+        } else if (this.currentPage === 1 && this.isInsideRect(x, y, this.sprayRangeButtonRect)) {
             this.buyUpgrade('sprayRangeLevel');
+        } else if (this.currentPage === 2 && this.isInsideRect(x, y, this.rewardPerAreaButtonRect)) {
+            this.buyUpgrade('rewardPerAreaLevel');
+        } else if (this.currentPage === 2 && this.isInsideRect(x, y, this.completionRewardButtonRect)) {
+            this.buyUpgrade('completionRewardLevel');
         }
 
         return true;
@@ -119,6 +136,133 @@ export class LaptopUpgradeUI {
         );
     }
 
+    drawHeader(ctx) {
+        ctx.fillStyle = '#4ec3ff';
+        ctx.font = '700 56px Arial';
+        ctx.fillText('업그레이드', 86, 124);
+
+        ctx.fillStyle = '#d7f3ff';
+        ctx.font = '28px Arial';
+        ctx.fillText('돈을 지불하고 물총을 업그레이드하세요.', 86, 182);
+
+        ctx.fillStyle = '#9db7c4';
+        ctx.font = '700 24px Arial';
+        ctx.fillText(`${this.currentPage} / 2`, 796, 114);
+
+        if (this.currentPage === 1) {
+            this.drawPageButton(ctx, this.nextPageButtonRect, '>');
+        } else {
+            this.drawPageButton(ctx, this.prevPageButtonRect, '<');
+        }
+    }
+
+    drawPageButton(ctx, rect, text) {
+        ctx.fillStyle = '#102638';
+        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+
+        ctx.strokeStyle = '#4ec3ff';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+
+        ctx.fillStyle = '#d7f3ff';
+        ctx.font = '700 34px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, rect.x + rect.width * 0.5, rect.y + rect.height * 0.5);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+    }
+
+    drawUpgradeCard(ctx, { x, y, title, levelKey, descriptionLines, buttonRect }) {
+        const level = this[levelKey];
+
+        // 카드 배경
+        ctx.fillStyle = '#102638';
+        ctx.fillRect(x, y, 284, 300);
+        ctx.fillStyle = level > 0 ? '#9cff7a' : '#4ec3ff';
+        ctx.fillRect(x, y, 284, 10);
+
+        // 카드 타이틀 텍스트
+        ctx.fillStyle = '#d7f3ff';
+        ctx.font = '700 28px Arial';
+        ctx.fillText(title, x + 26, y + 68);
+
+        // 레벨 텍스트
+        ctx.fillStyle = '#4ec3ff';
+        ctx.font = '700 24px Arial';
+        ctx.fillText(`Lv ${level} / ${this.maxUpgradeLevel}`, x + 26, y + 106);
+
+        // 설명 텍스트
+        ctx.fillStyle = '#9db7c4';
+        ctx.font = '20px Arial';
+        for (let i = 0; i < descriptionLines.length; i += 1) {
+            ctx.fillText(descriptionLines[i], x + 26, y + 148 + i * 28);
+        }
+
+        // 버튼 배경
+        ctx.fillStyle = level >= this.maxUpgradeLevel ? '#324754' : '#4ec3ff';
+        ctx.fillRect(buttonRect.x, buttonRect.y, buttonRect.width, buttonRect.height);
+
+        // 버튼 텍스트
+        ctx.fillStyle = '#061018';
+        ctx.font = '700 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(
+            level >= this.maxUpgradeLevel ? '최대' : '구매',
+            buttonRect.x + buttonRect.width * 0.5,
+            buttonRect.y + buttonRect.height * 0.5
+        );
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+    }
+
+    drawPageOne(ctx) {
+        this.drawUpgradeCard(ctx, {
+            x: 70,
+            y: 238,
+            title: '물총 세척력',
+            levelKey: 'cleanPowerLevel',
+            descriptionLines: ['더 빠르게', '먼지를 제거합니다.'],
+            buttonRect: this.cleanPowerButtonRect,
+        });
+        this.drawUpgradeCard(ctx, {
+            x: 370,
+            y: 238,
+            title: '물총 수용량',
+            levelKey: 'waterTankLevel',
+            descriptionLines: ['더 많은 물.'],
+            buttonRect: this.waterTankButtonRect,
+        });
+        this.drawUpgradeCard(ctx, {
+            x: 670,
+            y: 238,
+            title: '분사 범위 확장',
+            levelKey: 'sprayRangeLevel',
+            descriptionLines: ['더 넓은 범위로', '세척합니다.'],
+            buttonRect: this.sprayRangeButtonRect,
+        });
+    }
+
+    drawPageTwo(ctx) {
+        this.drawUpgradeCard(ctx, {
+            x: 194,
+            y: 238,
+            title: '면적당 보수',
+            levelKey: 'rewardPerAreaLevel',
+            descriptionLines: ['세차한 면적당', '획득 보수가 증가합니다.'],
+            buttonRect: this.rewardPerAreaButtonRect,
+        });
+        this.drawUpgradeCard(ctx, {
+            x: 546,
+            y: 238,
+            title: '완료 보수',
+            levelKey: 'completionRewardLevel',
+            descriptionLines: ['세차 완료 시', '추가 보수가 증가합니다.'],
+            buttonRect: this.completionRewardButtonRect,
+        });
+    }
+
     draw() {
         const ctx = this.context;
         if (!ctx) return;
@@ -131,134 +275,13 @@ export class LaptopUpgradeUI {
         ctx.fillStyle = '#0d2434';
         ctx.fillRect(48, 48, 928, 544);
 
-        ctx.fillStyle = '#4ec3ff';
-        ctx.font = '700 56px Arial';
-        ctx.fillText('업그레이드', 86, 124);
+        this.drawHeader(ctx);
 
-        ctx.fillStyle = '#d7f3ff';
-        ctx.font = '28px Arial';
-        ctx.fillText('돈을 지불하고 물총을 업그레이드하세요.', 86, 182);
-
-        // 업그레이드 1 배경
-        ctx.fillStyle = '#102638';
-        ctx.fillRect(70, 238, 284, 300);
-        ctx.fillStyle = this.cleanPowerLevel > 0 ? '#9cff7a' : '#4ec3ff';
-        ctx.fillRect(70, 238, 284, 10);
-        // 업그레이드 1 텍스트
-        ctx.fillStyle = '#d7f3ff';
-        ctx.font = '700 28px Arial';
-        ctx.fillText('물총 세척력', 96, 306);
-        // 업그레이드 1 레벨 텍스트
-        ctx.fillStyle = '#4ec3ff';
-        ctx.font = '700 24px Arial';
-        ctx.fillText(`Lv ${this.cleanPowerLevel} / ${this.maxUpgradeLevel}`, 96, 344);
-        // 업그레이드 1 설명 텍스트
-        ctx.fillStyle = '#9db7c4';
-        ctx.font = '20px Arial';
-        ctx.fillText('더 빠르게', 96, 386);
-        ctx.fillText('먼지를 제거합니다.', 96, 414);
-
-        // 업그레이드 1 버튼
-        ctx.fillStyle = this.cleanPowerLevel >= this.maxUpgradeLevel ? '#324754' : '#4ec3ff';
-        ctx.fillRect(
-            this.cleanPowerButtonRect.x,
-            this.cleanPowerButtonRect.y,
-            this.cleanPowerButtonRect.width,
-            this.cleanPowerButtonRect.height
-        );
-        // 업그레이드 1 버튼 텍스트
-        ctx.fillStyle = '#061018';
-        ctx.font = '700 24px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(
-            this.cleanPowerLevel >= this.maxUpgradeLevel ? '최대' : '구매',
-            this.cleanPowerButtonRect.x + this.cleanPowerButtonRect.width * 0.5,
-            this.cleanPowerButtonRect.y + this.cleanPowerButtonRect.height * 0.5
-        );
-
-
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
-
-        // 업그레이드 2 배경
-        ctx.fillStyle = '#102638';
-        ctx.fillRect(370, 238, 284, 300);
-        ctx.fillStyle = this.waterTankLevel > 0 ? '#9cff7a' : '#4ec3ff';
-        ctx.fillRect(370, 238, 284, 10);
-        // 업그레이드 2 텍스트
-        ctx.fillStyle = '#d7f3ff';
-        ctx.font = '700 28px Arial';
-        ctx.fillText('물총 수용량', 396, 312);
-        // 업그레이드 2 레벨 텍스트
-        ctx.fillStyle = '#4ec3ff';
-        ctx.font = '700 24px Arial';
-        ctx.fillText(`Lv ${this.waterTankLevel} / ${this.maxUpgradeLevel}`, 396, 388);
-        // 업그레이드 2 설명 텍스트
-        ctx.fillStyle = '#9db7c4';
-        ctx.font = '20px Arial';
-        ctx.fillText('더 많은 물.', 396, 424);
-        // 업그레이드 2 버튼
-        ctx.fillStyle = this.waterTankLevel >= this.maxUpgradeLevel ? '#324754' : '#4ec3ff';
-        ctx.fillRect(
-            this.waterTankButtonRect.x,
-            this.waterTankButtonRect.y,
-            this.waterTankButtonRect.width,
-            this.waterTankButtonRect.height
-        );
-        // 업그레이드 2 버튼 텍스트
-        ctx.fillStyle = '#061018';
-        ctx.font = '700 24px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(
-            this.waterTankLevel >= this.maxUpgradeLevel ? '최대' : '구매',
-            this.waterTankButtonRect.x + this.waterTankButtonRect.width * 0.5,
-            this.waterTankButtonRect.y + this.waterTankButtonRect.height * 0.5
-        );
-
-
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
-
-        // 업그레이드 3 배경
-        ctx.fillStyle = '#102638';
-        ctx.fillRect(670, 238, 284, 300);
-        ctx.fillStyle = this.sprayRangeLevel > 0 ? '#9cff7a' : '#4ec3ff';
-        ctx.fillRect(670, 238, 284, 10);
-        // 업그레이드 3 텍스트
-        ctx.fillStyle = '#d7f3ff';
-        ctx.font = '700 28px Arial';
-        ctx.fillText('분사 범위 확장', 696, 312);
-        // 업그레이드 3 레벨 텍스트
-        ctx.fillStyle = '#4ec3ff';
-        ctx.font = '700 24px Arial';
-        ctx.fillText(`Lv ${this.sprayRangeLevel} / ${this.maxUpgradeLevel}`, 696, 388);
-        // 업그레이드 3 설명 텍스트
-        ctx.fillStyle = '#9db7c4';
-        ctx.font = '20px Arial';
-        ctx.fillText('더 넓은 범위로', 696, 424);
-
-        // 업그레이드 3 버튼
-        ctx.fillStyle = this.sprayRangeLevel >= this.maxUpgradeLevel ? '#324754' : '#4ec3ff';
-        ctx.fillRect(
-            this.sprayRangeButtonRect.x,
-            this.sprayRangeButtonRect.y,
-            this.sprayRangeButtonRect.width,
-            this.sprayRangeButtonRect.height
-        );
-        // 업그레이드 3 버튼 텍스트
-        ctx.fillStyle = '#061018';
-        ctx.font = '700 24px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(
-            this.sprayRangeLevel >= this.maxUpgradeLevel ? '최대' : '구매',
-            this.sprayRangeButtonRect.x + this.sprayRangeButtonRect.width * 0.5,
-            this.sprayRangeButtonRect.y + this.sprayRangeButtonRect.height * 0.5
-        );
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
+        if (this.currentPage === 1) {
+            this.drawPageOne(ctx);
+        } else {
+            this.drawPageTwo(ctx);
+        }
 
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 8;
