@@ -261,7 +261,7 @@ export class WashGun {
         this.updateBob(delta);
     }
 
-    updateWaterStream(isActive, targetPoint) {
+    updateWaterStream(isActive, targetPoint, washRadius = this.baseWashRadius) {
         if (!this.muzzlePoint || !this.streamGroup || !this.streamConeMesh || !this.streamSprayPoints) {
             return;
         }
@@ -286,6 +286,7 @@ export class WashGun {
         this.streamTime += 0.08;
         this.streamDirection.normalize();
         this.streamMidPoint.copy(this.streamStart).add(this.streamEnd).multiplyScalar(0.5);
+        this.streamWidthScale = Math.max(1, washRadius / this.baseWashRadius);
 
         // 스트림 그룹을 총구에서 타겟 방향 물줄기에 맞게 이동
         this.streamGroup.visible = true;

@@ -180,7 +180,8 @@ function gameUpdate() {
 
     washGun.updateWaterStream(
         cameraManager.mode === 'world' && isWashing && washGun.waterFillLevel > 0,
-        sprayTarget
+        sprayTarget,
+        economyManager.getWashRadius()
     );
 
     for (const model of washableModels) {
