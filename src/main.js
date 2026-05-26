@@ -98,7 +98,13 @@ const cameraManager = new CameraManager({
         isWashing = false;
     },
 });
-// 좌클릭을 누르고 있을 때 물을 쏜다고 판정
+
+// 레이캐스트를 위한 마우스 위치 업데이트
+window.addEventListener('mousemove', (e) => {
+    mousePos.set(e.clientX / window.innerWidth * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+});
+
+// 좌클릭 처리 cameraManager에 전달.
 window.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
 
@@ -112,13 +118,14 @@ window.addEventListener('mousedown', (e) => {
 window.addEventListener('mouseup', (e) => { if (e.button === 0) isWashing = false; });
 
 
+
 // 4. 게임 메인 루프
 function gameUpdate() {
     requestAnimationFrame(gameUpdate);
 
     const delta = clock.getDelta();
     player.update(delta, cameraManager.viewQuaternion);
-    cameraManager.update();
+    cameraManager.update(delta);
     washGun.update(delta);
 
     // 커서 기준 물줄기 타겟 계산 (히트가 없으면 전방 고정 거리)

@@ -26,6 +26,7 @@ export class CameraManager {
         this.onStopWashing = onStopWashing;
         this.mode = 'world';
         this.mouseCanLock = true;
+        this.mouseLockCooldownTimer = null;
         this.isPointerLocked = false;
         this.viewYaw = 0;
         this.viewPitch = 0;
@@ -36,6 +37,13 @@ export class CameraManager {
         this.laptopViewQuaternion = new THREE.Quaternion();
         // 카메라 회전을 계산할 임시 카메라입니다. 실제로는 사용하지 않습니다.
         this.laptopViewCamera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+        this.transitionTime = 0;
+        this.transitionDuration = 0.45;
+        this.transitionNextMode = 'world';
+        this.transitionFromPosition = new THREE.Vector3();
+        this.transitionToPosition = new THREE.Vector3();
+        this.transitionFromQuaternion = new THREE.Quaternion();
+        this.transitionToQuaternion = new THREE.Quaternion();
 
         this.scene.add(this.camera);
         this.player.setInputEnabled(false);
@@ -124,7 +132,12 @@ export class CameraManager {
         return this.mode === 'world';
     }
 
-    update() {
+    update(delta) {
+        if (this.mode === 'transition') {
+            this.updateTransition(delta);
+            return;
+        }
+
         if (this.mode !== 'world') return;
 
         this.camera.position.copy(this.player.getEyePosition());
@@ -133,9 +146,8 @@ export class CameraManager {
 
     // 월드 -> 랩탑 UI 모드 전환
     enterLaptop() {
-        if (!this.applyLaptopCamera()) return false;
+        if (!this.laptopViewCached && !this.cacheLaptopViewTransform()) return false;
 
-        this.mode = 'laptop';
         this.onStopWashing?.();
         // 플레이어 이동 listen 끄기
         this.player.setInputEnabled(false);
@@ -143,6 +155,7 @@ export class CameraManager {
         document.exitPointerLock();
         // 물총 숨기기
         this.washGun.group.visible = false;
+        this.startTransition(this.laptopViewPosition, this.laptopViewQuaternion, 'laptop');
         return true;
     }
 
@@ -150,11 +163,11 @@ export class CameraManager {
     exitLaptop() {
         if (this.mode !== 'laptop') return false;
 
-        this.mode = 'world';
-        this.player.setInputEnabled(true);
+        const worldPosition = this.player.getEyePosition();
+
         this.washGun.group.visible = true;
         this.lockPointer();
-        this.update();
+        this.startTransition(worldPosition, this.viewQuaternion, 'world');
         return true;
     }
 
@@ -179,10 +192,16 @@ export class CameraManager {
         this.lockPointer();
     }
 
+    // 멱등성있는 마우스 락 쿨다운 함수
     startMouseLockCooldown() {
         this.mouseCanLock = false;
-        setTimeout(() => {
+        if (this.mouseLockCooldownTimer) {
+            clearTimeout(this.mouseLockCooldownTimer);
+        }
+
+        this.mouseLockCooldownTimer = setTimeout(() => {
             this.mouseCanLock = true;
+            this.mouseLockCooldownTimer = null;
         }, 1500);
     }
 
@@ -196,13 +215,43 @@ export class CameraManager {
         this.domElement.requestPointerLock();
     }
 
-    applyLaptopCamera() {
-        // 랩탑 모드에서의 카메라 위치를 한번 계산하고 이후는 캐싱하여 사용합니다.
-        if (!this.laptopViewCached && !this.cacheLaptopViewTransform()) return false;
+    // 카메라 위치/회전 전환 트랜지션 시작
+    startTransition(toPosition, toQuaternion, nextMode) {
+        this.transitionFromPosition.copy(this.camera.position);
+        this.transitionFromQuaternion.copy(this.camera.quaternion);
+        this.transitionToPosition.copy(toPosition);
+        this.transitionToQuaternion.copy(toQuaternion);
+        this.transitionNextMode = nextMode;
+        this.transitionTime = 0;
+        this.mode = 'transition';
+    }
 
-        this.camera.position.copy(this.laptopViewPosition);
-        this.camera.quaternion.copy(this.laptopViewQuaternion);
-        return true;
+    // 트랜지션 모드인 경우 정해진 From/To 위치와 회전을 보간합니다.
+    updateTransition(delta) {
+        this.transitionTime += delta;
+        const progress = Math.min(this.transitionTime / this.transitionDuration, 1);
+        const eased = progress * progress * (3 - 2 * progress);
+
+        this.camera.position.lerpVectors(
+            this.transitionFromPosition,
+            this.transitionToPosition,
+            eased
+        );
+        this.camera.quaternion.slerpQuaternions(
+            this.transitionFromQuaternion,
+            this.transitionToQuaternion,
+            eased
+        );
+
+        if (progress < 1) return;
+
+        this.mode = this.transitionNextMode;
+        if (this.mode === 'world') {
+            this.player.setInputEnabled(true);
+        } else if (this.mode === 'laptop') {
+            // 마우스락 쿨다운 시작
+            this.startMouseLockCooldown();
+        }
     }
 
     cacheLaptopViewTransform() {
