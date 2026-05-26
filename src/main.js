@@ -8,6 +8,7 @@ import { LaptopUpgradeUI } from './LaptopUpgradeUI.js';
 import { CameraManager } from './CameraManager.js';
 import { WashGun } from './WashGun.js';
 import { MoneyUI } from './MoneyUI.js';
+import { InstructionUI } from './InstructionUI.js';
 import * as Collision from './CollisionGroup.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 
@@ -81,6 +82,7 @@ const laptopUpgradeUI = new LaptopUpgradeUI({
     laptopScreen: laptop_scrn,
 });
 const moneyUI = new MoneyUI({ camera });
+const instructionUI = new InstructionUI({ camera });
 
 
 function getCurrentWashRadius() {
@@ -182,6 +184,7 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
     moneyUI.updateLayout();
+    instructionUI.updateLayout();
 });
 
 gameUpdate();
