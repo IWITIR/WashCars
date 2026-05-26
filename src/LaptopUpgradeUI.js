@@ -1,9 +1,8 @@
 import * as THREE from 'three';
 
 export class LaptopUpgradeUI {
-    constructor({ laptopScreen, audioManager }) {
+    constructor({ laptopScreen }) {
         this.laptopScreen = laptopScreen;
-        this.audioManager = audioManager;
         this.screenMesh = null;
         this.canvas = document.createElement('canvas');
         this.canvas.width = 1024;
@@ -49,7 +48,6 @@ export class LaptopUpgradeUI {
 
         const intersects = raycaster.intersectObject(this.panel, false);
         if (intersects.length === 0 || !intersects[0].uv) return false;
-        this.audioManager?.playOneShot('mouse_click');
 
         const uv = intersects[0].uv;
         const x = uv.x * this.canvas.width;
@@ -70,28 +68,6 @@ export class LaptopUpgradeUI {
         if (!this.panel) return false;
 
         return raycaster.intersectObject(this.panel, false).length > 0;
-    }
-
-    placeCamera(camera, referenceCamera = null) {
-        if (!this.panel) return false;
-
-        this.panel.updateWorldMatrix(true, false);
-
-        const center = new THREE.Vector3();
-        const normal = new THREE.Vector3(0, 0, 1);
-        const quaternion = new THREE.Quaternion();
-
-        this.panel.getWorldPosition(center);
-        this.panel.getWorldQuaternion(quaternion);
-        normal.applyQuaternion(quaternion).normalize();
-
-        if (referenceCamera && normal.dot(referenceCamera.position.clone().sub(center)) < 0) {
-            normal.multiplyScalar(-1);
-        }
-
-        camera.position.copy(center).addScaledVector(normal, 7);
-        camera.lookAt(center);
-        return true;
     }
 
     buyUpgrade(levelKey) {

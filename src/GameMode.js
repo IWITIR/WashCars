@@ -24,6 +24,8 @@ export class GameMode {
         this.mode = 'world';
         this.mouseCanLock = true;
         this.laptopCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+        this.laptopScreenCenter = new THREE.Vector3();
+        this.laptopCameraSet = false;
 
         this.scene.add(this.laptopCamera);
         this.bindEvents();
@@ -71,7 +73,7 @@ export class GameMode {
     }
 
     enterLaptop() {
-        if (!this.laptopUpgradeUI.placeCamera(this.laptopCamera, this.worldCamera)) return false;
+        if (!this.laptopCameraSet && !this.placeLaptopCamera()) return false;
 
         this.mode = 'laptop';
         this.onStopWashing?.();
@@ -123,6 +125,22 @@ export class GameMode {
         }
 
         this.player.controls.lock();
+    }
+
+    placeLaptopCamera() {
+        if (!this.laptopUpgradeUI.panel) return false;
+
+        this.laptopUpgradeUI.panel.updateWorldMatrix(true, false);
+        this.laptopUpgradeUI.panel.getWorldPosition(this.laptopScreenCenter);
+
+        this.laptopCamera.position.set(
+            this.laptopScreenCenter.x,
+            this.laptopScreenCenter.y,
+            this.laptopScreenCenter.z + 7
+        );
+        this.laptopCamera.lookAt(this.laptopScreenCenter);
+        this.laptopCameraSet = true;
+        return true;
     }
 
     isWorld() {

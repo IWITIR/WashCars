@@ -77,7 +77,6 @@ const menuVolumePanel = document.getElementById('menu-volume-panel');
 
 const laptopUpgradeUI = new LaptopUpgradeUI({
     laptopScreen: laptop_scrn,
-    audioManager: audioManager,
 });
 
 
