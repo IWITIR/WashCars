@@ -1,8 +1,20 @@
 import * as THREE from 'three';
 
 export class LaptopUpgradeUI {
-    constructor({ laptopScreen }) {
+    constructor({
+        laptopScreen,
+        getUpgradeState = () => ({
+            level: 0,
+            maxLevel: 5,
+            cost: 0,
+            isMaxed: false,
+            canBuy: false,
+        }),
+        onBuyUpgrade = () => false,
+    }) {
         this.laptopScreen = laptopScreen;
+        this.getUpgradeState = getUpgradeState;
+        this.onBuyUpgrade = onBuyUpgrade;
         this.screenMesh = null;
         this.canvas = document.createElement('canvas');
         this.canvas.width = 1024;
@@ -19,12 +31,6 @@ export class LaptopUpgradeUI {
         });
         this.panel = null;
         this.isReady = false;
-        this.cleanPowerLevel = 0;
-        this.waterTankLevel = 0;
-        this.sprayRangeLevel = 0;
-        this.rewardPerAreaLevel = 0;
-        this.completionRewardLevel = 0;
-        this.maxUpgradeLevel = 5;
         this.currentPage = 1;
         this.cleanPowerButtonRect = { x: 96, y: 452, width: 232, height: 70 };
         this.waterTankButtonRect = { x: 396, y: 452, width: 232, height: 70 };
@@ -67,15 +73,15 @@ export class LaptopUpgradeUI {
             this.currentPage = 1;
             this.draw();
         } else if (this.currentPage === 1 && this.isInsideRect(x, y, this.cleanPowerButtonRect)) {
-            this.buyUpgrade('cleanPowerLevel');
+            this.buyUpgrade('cleanPower');
         } else if (this.currentPage === 1 && this.isInsideRect(x, y, this.waterTankButtonRect)) {
-            this.buyUpgrade('waterTankLevel');
+            this.buyUpgrade('waterTank');
         } else if (this.currentPage === 1 && this.isInsideRect(x, y, this.sprayRangeButtonRect)) {
-            this.buyUpgrade('sprayRangeLevel');
+            this.buyUpgrade('sprayRange');
         } else if (this.currentPage === 2 && this.isInsideRect(x, y, this.rewardPerAreaButtonRect)) {
-            this.buyUpgrade('rewardPerAreaLevel');
+            this.buyUpgrade('rewardPerArea');
         } else if (this.currentPage === 2 && this.isInsideRect(x, y, this.completionRewardButtonRect)) {
-            this.buyUpgrade('completionRewardLevel');
+            this.buyUpgrade('completionReward');
         }
 
         return true;
@@ -87,10 +93,8 @@ export class LaptopUpgradeUI {
         return raycaster.intersectObject(this.panel, false).length > 0;
     }
 
-    buyUpgrade(levelKey) {
-        if (this[levelKey] >= this.maxUpgradeLevel) return;
-
-        this[levelKey] += 1;
+    buyUpgrade(upgradeKey) {
+        this.onBuyUpgrade(upgradeKey);
         this.draw();
     }
 
@@ -173,13 +177,13 @@ export class LaptopUpgradeUI {
         ctx.textBaseline = 'alphabetic';
     }
 
-    drawUpgradeCard(ctx, { x, y, title, levelKey, descriptionLines, buttonRect }) {
-        const level = this[levelKey];
+    drawUpgradeCard(ctx, { x, y, title, upgradeKey, descriptionLines, buttonRect }) {
+        const state = this.getUpgradeState(upgradeKey);
 
         // 카드 배경
         ctx.fillStyle = '#102638';
         ctx.fillRect(x, y, 284, 300);
-        ctx.fillStyle = level > 0 ? '#9cff7a' : '#4ec3ff';
+        ctx.fillStyle = state.level > 0 ? '#9cff7a' : '#4ec3ff';
         ctx.fillRect(x, y, 284, 10);
 
         // 카드 타이틀 텍스트
@@ -190,7 +194,7 @@ export class LaptopUpgradeUI {
         // 레벨 텍스트
         ctx.fillStyle = '#4ec3ff';
         ctx.font = '700 24px Arial';
-        ctx.fillText(`Lv ${level} / ${this.maxUpgradeLevel}`, x + 26, y + 106);
+        ctx.fillText(`Lv ${state.level} / ${state.maxLevel}`, x + 26, y + 106);
 
         // 설명 텍스트
         ctx.fillStyle = '#9db7c4';
@@ -199,8 +203,12 @@ export class LaptopUpgradeUI {
             ctx.fillText(descriptionLines[i], x + 26, y + 148 + i * 28);
         }
 
+        ctx.fillStyle = state.canBuy || state.isMaxed ? '#d7f3ff' : '#ff9f8f';
+        ctx.font = '700 20px Arial';
+        ctx.fillText(state.isMaxed ? '가격: -' : `가격: ${state.cost.toLocaleString()}원`, x + 26, y + 224);
+
         // 버튼 배경
-        ctx.fillStyle = level >= this.maxUpgradeLevel ? '#324754' : '#4ec3ff';
+        ctx.fillStyle = state.canBuy ? '#4ec3ff' : '#324754';
         ctx.fillRect(buttonRect.x, buttonRect.y, buttonRect.width, buttonRect.height);
 
         // 버튼 텍스트
@@ -209,7 +217,7 @@ export class LaptopUpgradeUI {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(
-            level >= this.maxUpgradeLevel ? '최대' : '구매',
+            state.isMaxed ? '최대' : '구매',
             buttonRect.x + buttonRect.width * 0.5,
             buttonRect.y + buttonRect.height * 0.5
         );
@@ -222,7 +230,7 @@ export class LaptopUpgradeUI {
             x: 70,
             y: 238,
             title: '물총 세척력',
-            levelKey: 'cleanPowerLevel',
+            upgradeKey: 'cleanPower',
             descriptionLines: ['더 빠르게', '먼지를 제거합니다.'],
             buttonRect: this.cleanPowerButtonRect,
         });
@@ -230,7 +238,7 @@ export class LaptopUpgradeUI {
             x: 370,
             y: 238,
             title: '물총 수용량',
-            levelKey: 'waterTankLevel',
+            upgradeKey: 'waterTank',
             descriptionLines: ['더 많은 물.'],
             buttonRect: this.waterTankButtonRect,
         });
@@ -238,7 +246,7 @@ export class LaptopUpgradeUI {
             x: 670,
             y: 238,
             title: '분사 범위 확장',
-            levelKey: 'sprayRangeLevel',
+            upgradeKey: 'sprayRange',
             descriptionLines: ['더 넓은 범위로', '세척합니다.'],
             buttonRect: this.sprayRangeButtonRect,
         });
@@ -249,7 +257,7 @@ export class LaptopUpgradeUI {
             x: 194,
             y: 238,
             title: '면적당 보수',
-            levelKey: 'rewardPerAreaLevel',
+            upgradeKey: 'rewardPerArea',
             descriptionLines: ['세차한 면적당', '획득 보수가 증가합니다.'],
             buttonRect: this.rewardPerAreaButtonRect,
         });
@@ -257,7 +265,7 @@ export class LaptopUpgradeUI {
             x: 546,
             y: 238,
             title: '완료 보수',
-            levelKey: 'completionRewardLevel',
+            upgradeKey: 'completionReward',
             descriptionLines: ['세차 완료 시', '추가 보수가 증가합니다.'],
             buttonRect: this.completionRewardButtonRect,
         });

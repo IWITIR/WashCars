@@ -10,6 +10,7 @@ export class MoneyEffect {
     }
 
     trySpawn(position, amount = 100) {
+        if (!Number.isFinite(amount)) return false;
         if (this.spawnCooldown > 0) return false;
         if (amount <= 0) return false;
 

@@ -10,6 +10,7 @@ import { WashGun } from './WashGun.js';
 import { MoneyUI } from './ui/MoneyUI.js';
 import { InstructionUI } from './ui/InstructionUI.js';
 import { MoneyEffect } from './ui/MoneyEffect.js';
+import { EconomyManager } from './EconomyManager.js';
 import * as Collision from './CollisionGroup.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 
@@ -79,17 +80,15 @@ const menuPopup = document.getElementById('menu');
 const menuVolumePanel = document.getElementById('menu-volume-panel');
 
 // 3. UI 세팅
+const moneyUI = new MoneyUI({ camera });
+const economyManager = new EconomyManager({ moneyUI });
 const laptopUpgradeUI = new LaptopUpgradeUI({
     laptopScreen: laptop_scrn,
+    getUpgradeState: (key) => economyManager.getUpgradeState(key),
+    onBuyUpgrade: (key) => economyManager.tryBuyUpgrade(key),
 });
-const moneyUI = new MoneyUI({ camera });
 const instructionUI = new InstructionUI({ camera });
 const moneyEffect = new MoneyEffect({ scene });
-
-
-function getCurrentWashRadius() {
-    return 30;
-}
 
 // 게임 모드 세팅 (플레이어 조작 모드, 랩탑 UI 모드, 일시정지 모드)
 const cameraManager = new CameraManager({
@@ -149,7 +148,7 @@ function gameUpdate() {
 
     // 물을 쏘고 있을 때의 충돌(때 지우기) 연산
     if (cameraManager.mode === 'world' && isWashing && washGun.waterFillLevel > 0) {
-        washGun.waterFillLevel = Math.max(0, washGun.waterFillLevel - delta * 0.50);
+        washGun.waterFillLevel = Math.max(0, washGun.waterFillLevel - delta * economyManager.getWaterDrainRate());
         audioManager.play('water_hose', { position: player.rigidBody.translation() });
 
         const washMeshes = washableModels.flatMap((model) => model.getWashMeshes());
@@ -161,8 +160,14 @@ function gameUpdate() {
 
             if (washableModel) {
                 sprayTarget.copy(hit.point);
-                const cleanedAmount = washableModel.wash(hit, getCurrentWashRadius());
-                moneyEffect.trySpawn(hit.point, cleanedAmount);
+                const cleanedAmount = washableModel.wash(
+                    hit,
+                    economyManager.getWashRadius(),
+                    economyManager.getWashStrengthMultiplier()
+                );
+                const reward = economyManager.calculateWashReward(cleanedAmount);
+                economyManager.addMoney(reward);
+                moneyEffect.trySpawn(hit.point, reward);
                 audioManager.play('water_hit', { position: hit.point });
             }
         } else {
