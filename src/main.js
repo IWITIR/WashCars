@@ -29,7 +29,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // 조명 세팅
-setupLighting(scene);
+setupLighting(scene, camera);
 
 // 클락 세팅
 const clock = new THREE.Clock();

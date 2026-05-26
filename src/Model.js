@@ -24,6 +24,11 @@ export class Model {
         this.collisionGroups = collisionGroups; // 충돌 그룹 저장
         this.rigidBody = null;
         this.scale = scale;
+        this.localBoundsBox = new THREE.Box3();
+        this.localBoundsMeshBox = new THREE.Box3();
+        this.inverseGroupMatrix = new THREE.Matrix4();
+        this.groupWorldPosition = new THREE.Vector3();
+        this.groupWorldQuaternion = new THREE.Quaternion();
 
         gltfLoader.load(
             path,
@@ -52,9 +57,22 @@ export class Model {
         const center = new THREE.Vector3();
         box.getCenter(center);
 
-        const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed();
+        this.group.getWorldPosition(this.groupWorldPosition);
+        this.group.getWorldQuaternion(this.groupWorldQuaternion);
+
+        const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed()
+            .setTranslation(
+                this.groupWorldPosition.x,
+                this.groupWorldPosition.y,
+                this.groupWorldPosition.z
+            )
+            .setRotation({
+                x: this.groupWorldQuaternion.x,
+                y: this.groupWorldQuaternion.y,
+                z: this.groupWorldQuaternion.z,
+                w: this.groupWorldQuaternion.w,
+            });
         this.rigidBody = this.world.createRigidBody(rigidBodyDesc);
-        this.rigidBody.setTranslation({ x: this.group.position.x, y: this.group.position.y, z: this.group.position.z }, true);
 
         const hX = size.x / 2;
         const hY = size.y / 2;
@@ -194,6 +212,30 @@ export class Model {
         this.model.updateMatrixWorld(true);
 
         if (!rebuildPhysics || !this.world) return;
+
+        if (this.rigidBody) {
+            this.world.removeRigidBody(this.rigidBody);
+            this.rigidBody = null;
+        }
+
+        this.setupPhysics();
+    }
+
+    setPosition(x = 0, y = 0, z = 0) {
+        this.group.position.set(x, y, z);
+        this.group.updateMatrixWorld(true);
+
+        if (!this.rigidBody) return;
+
+        this.group.getWorldPosition(this.groupWorldPosition);
+        this.rigidBody.setTranslation(this.groupWorldPosition, true);
+    }
+
+    setRotation(x = 0, y = 0, z = 0, { rebuildPhysics = true } = {}) {
+        this.group.rotation.set(x, y, z);
+        this.group.updateMatrixWorld(true);
+
+        if (!rebuildPhysics || !this.world || !this.model) return;
 
         if (this.rigidBody) {
             this.world.removeRigidBody(this.rigidBody);

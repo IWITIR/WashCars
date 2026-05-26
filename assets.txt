@@ -12,13 +12,7 @@ muscle_car:
 Dodge Challenger - Muscle Car - Low-Poly | sketchfab (free-standard)
 https://sketchfab.com/3d-models/dodge-challenger-muscle-car-low-poly-4c741c8d40c34ebe8b999e5a2823d80f 
 
-volvo_car:
-Volvo 240 | sketchfab (Free standard)
-https://sketchfab.com/3d-models/volvo-240-d90d42c494104fcdb174c4f28a523562
-
-truck:
-AC - Honda Acty Ha3 [FREE] | sketchfab (free-standard)
-https://sketchfab.com/search?category=cars-vehicles&features=downloadable&licenses=72eb2b1960364637901eacce19283624&licenses=7c23a1ba438d4306920229c12afcb5f9&type=models
+dacia:
 
 
 sounds-
@@ -45,3 +39,11 @@ https://freesound.org/people/Pixeliota/sounds/678248/
 bgm:
 Rabbit Bop | freesound.org (CC0)
 https://freesound.org/people/code_box/sounds/575759/
+
+car_engine:
+SFX_Car_Engine_Outside_Start.wav | freesound.org (CC0)
+https://freesound.org/people/GiocoSound/sounds/401558/
+
+casher:
+old cash register open and close with a bing | freesound.org (CC0)
+https://freesound.org/people/clubmydia+/sounds/584168/

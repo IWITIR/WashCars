@@ -58,5 +58,21 @@ export async function loadSounds(camera) {
         volume: 0.3,
     });
 
+    await audioManager.load(
+        'casher',
+        './sound/casher.wav',
+        {
+        loop: false,
+        volume: 0.5,
+    });
+
+    await audioManager.load(
+        'car_engine',
+        './sound/car_engine.wav',
+        {
+        loop: true,
+        volume: 0.4,
+    });
+
     return audioManager;
 }
