@@ -48,11 +48,32 @@ export class Model {
         );
     }
 
-    // 월드 좌표계 기준으로 현재 모델을 감싸는 박스 모양의 콜라이더를 생성합니다.
+    // 로컬 좌표계 기준으로 모델의 경계를 계산합니다. 콜라이더 생성 시 사용됩니다.
+    computeLocalBounds() {
+        this.localBoundsBox.makeEmpty();
+        this.group.updateWorldMatrix(true, true);
+        this.inverseGroupMatrix.copy(this.group.matrixWorld).invert();
+
+        this.model.traverse((child) => {
+            if (!child.isMesh || !child.geometry) return;
+
+            child.geometry.computeBoundingBox();
+            this.localBoundsMeshBox.copy(child.geometry.boundingBox);
+            this.localBoundsMeshBox.applyMatrix4(child.matrixWorld);
+            this.localBoundsMeshBox.applyMatrix4(this.inverseGroupMatrix);
+            this.localBoundsBox.union(this.localBoundsMeshBox);
+        });
+
+        return this.localBoundsBox;
+    }
+
+    // 그룹 로컬 좌표계 기준으로 현재 모델을 감싸는 박스 모양의 콜라이더를 생성합니다.
     setupPhysics() {
         if (!this.world || !this.model) return;
 
-        const box = new THREE.Box3().setFromObject(this.model);
+        const box = this.computeLocalBounds();
+        if (box.isEmpty()) return;
+
         const size = new THREE.Vector3();
         box.getSize(size);
         const center = new THREE.Vector3();

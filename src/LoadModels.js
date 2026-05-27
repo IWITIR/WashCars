@@ -90,7 +90,7 @@ export function loadModels({ scene, world }) {
             depthWrite: true,
             alphaTest: 0,
         }),
-        cleanTargetScore: 24000,
+        cleanTargetScore: 20000,
         hideProgressBar: true,
         washRadiusScale: 0.6,
     });
