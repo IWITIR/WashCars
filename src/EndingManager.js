@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { RenderTransitionPass } from 'three/addons/postprocessing/RenderTransitionPass.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // 엔딩 시퀀스를 관리합니다. 별도의 씬을 만들고 postprocessing 패스를 활용해 전환합니다.
 export class EndingManager {
@@ -43,6 +44,34 @@ export class EndingManager {
             this.worldCamera.far
         );
         this.endingScene.add(this.endingCamera);
+
+        const gltfLoader = new GLTFLoader();
+        this.garage = gltfLoader.load(
+            './glb/Garage.glb',
+            (gltf) => {
+                this.model = gltf.scene;
+                this.model.scale.setScalar(0.25);
+                this.endingScene.add(this.model);
+            },
+            undefined,
+            (error) => {
+                console.error('Garage GLB load error:', error);
+            }
+        );
+        this.garageDoor = gltfLoader.load(
+            './glb/GarageDoor.glb',
+            (gltf) => {
+                this.doorModel = gltf.scene;
+                this.doorModel.scale.setScalar(0.25);
+                this.endingScene.add(this.doorModel);
+            },
+            undefined,
+            (error) => {
+                console.error('Garage Door GLB load error:', error);
+            }
+        );
+
+        // 렌더 패스 넣기
         this.endingRenderPass = new RenderPass(this.endingScene, this.endingCamera);
         this.transitionPass = new RenderTransitionPass(
             this.endingScene,
@@ -178,20 +207,13 @@ export class EndingManager {
     setupEndingLighting() {
         this.endingScene.add(new THREE.AmbientLight(0xffffff, 1.4));
 
-        const keyLight = new THREE.DirectionalLight(0xffffff, 3);
-        keyLight.position.set(5, 10, 8);
-        this.endingScene.add(keyLight);
+        const endingDirectionalLight = new THREE.DirectionalLight(0xffffff, 8);
+        endingDirectionalLight.position.set(5, 10, 8);
+        this.endingScene.add(endingDirectionalLight);
 
-        const rimLight = new THREE.PointLight(0x4ec3ff, 70, 40);
-        rimLight.position.set(-5, 4, -5);
-        this.endingScene.add(rimLight);
-
-        const floor = new THREE.Mesh(
-            new THREE.CircleGeometry(6, 48),
-            new THREE.MeshStandardMaterial({ color: 0x102638, roughness: 0.8 })
-        );
-        floor.rotation.x = -Math.PI * 0.5;
-        this.endingScene.add(floor);
+        const endingPointLight = new THREE.PointLight(0x4ec3ff, 200, 40);
+        endingPointLight.position.set(0, 10, 0);
+        this.endingScene.add(endingPointLight);
     }
 
     createTextSprite({ width, height, lines, fontSize, background, stroke }) {

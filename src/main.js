@@ -246,6 +246,13 @@ window.addEventListener('resize', () => {
     endingManager.updateLayout();
 });
 
+// 돈 치트
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyM') {
+        economyManager.addMoney(1000000);
+    }
+});
+
 gameUpdate();
 
 
