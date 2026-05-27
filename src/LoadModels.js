@@ -67,7 +67,9 @@ export function loadModels({ scene, world }) {
             depthWrite: true,
             alphaTest: 0,
         }),
+        cleanTargetScore: 32000,
         hideProgressBar: false,
+        
     });
     muscle_car.rescale(6.0);
     muscle_car.setPosition(0, 0, 0);
@@ -88,7 +90,9 @@ export function loadModels({ scene, world }) {
             depthWrite: true,
             alphaTest: 0,
         }),
+        cleanTargetScore: 24000,
         hideProgressBar: true,
+        
     });
     dacia.setRotation(0, Math.PI / 2, 0);
     dacia.setPosition(0, 0, 300);
