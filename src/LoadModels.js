@@ -92,7 +92,7 @@ export function loadModels({ scene, world }) {
         }),
         cleanTargetScore: 24000,
         hideProgressBar: true,
-        washRadiusScale: 0.8,
+        washRadiusScale: 0.6,
     });
     dacia.setRotation(0, Math.PI / 2, 0);
     dacia.setPosition(0, 0, 300);
