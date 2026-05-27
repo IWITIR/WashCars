@@ -44,6 +44,8 @@ export class EndingManager {
             this.worldCamera.far
         );
         this.endingScene.add(this.endingCamera);
+        this.dancer = null;
+        this.mixer = null;
 
         const gltfLoader = new GLTFLoader();
         this.garage = gltfLoader.load(
@@ -70,6 +72,8 @@ export class EndingManager {
                 console.error('Garage Door GLB load error:', error);
             }
         );
+
+        this.loadDancer();
 
         // 렌더 패스 넣기
         this.endingRenderPass = new RenderPass(this.endingScene, this.endingCamera);
@@ -104,8 +108,6 @@ export class EndingManager {
         this.thanksSprite.position.set(0, 0.72, -2);
         this.thanksSprite.scale.set(2.25, 0.5, 1);
         this.endingCamera.add(this.thanksSprite);
-
-        this.mixer = null;
 
         this.setupEndingLighting();
         this.updateLayout();
@@ -143,18 +145,20 @@ export class EndingManager {
         this.composer.removePass(this.outputPass);
         this.composer.addPass(this.transitionPass);
         this.composer.addPass(this.outputPass);
-
-        this.loadDancer();
     }
 
     async loadDancer() {
         const loader = new FBXLoader();
-        const biker = await loader.loadAsync('./biker.fbx');
-        biker.scale.setScalar(0.05);
-        biker.position.set(0, 0, 0);
-        this.mixer = new THREE.AnimationMixer(biker);
-        this.mixer.clipAction(biker.animations[0]).play();
-        this.endingScene.add(biker);
+        try {
+            this.dancer = await loader.loadAsync('./biker.fbx');
+            this.dancer.scale.setScalar(0.05);
+            this.dancer.position.set(0, 0, 0);
+            this.mixer = new THREE.AnimationMixer(this.dancer);
+            this.mixer.clipAction(this.dancer.animations[0]).play();
+            this.endingScene.add(this.dancer);
+        } catch (error) {
+            console.error('Ending dancer FBX load error:', error);
+        }
     }
 
     update(delta) {
