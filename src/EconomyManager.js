@@ -119,7 +119,7 @@ export class EconomyManager {
     }
 
     getWaterDrainRate() {
-        return Math.max(0.22, 0.5 - this.getUpgradeLevel('waterTank') * 0.055);
+        return Math.max(0.01, 0.5 - this.getUpgradeLevel('waterTank') * 0.05);
     }
 
     getCompletionReward() {

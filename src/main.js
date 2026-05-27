@@ -173,7 +173,8 @@ function gameUpdate() {
                 const cleanedAmount = washableModel.wash(
                     hit,
                     economyManager.getWashRadius(),
-                    economyManager.getWashStrengthMultiplier()
+                    economyManager.getWashStrengthMultiplier(),
+                    delta,
                 );
                 const reward = economyManager.calculateWashReward(cleanedAmount);
                 economyManager.addMoney(reward);
@@ -205,6 +206,7 @@ function gameUpdate() {
     stats.update();
     renderer.render(scene, cameraManager.camera);
     world.step(); // 물리 시뮬레이션 한 스텝 진행
+    // console.log(renderer.info.render); 
 }
 
 // 창 크기 변경 대응

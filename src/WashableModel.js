@@ -13,6 +13,7 @@ export class WashableModel extends Model {
         cleanTargetScore = 28000,
         progressSampleStep = 4,
         hideProgressBar = false,
+        washRadiusScale = 1.0, // 모델마다 uv맵 스케일이 달라 보정값
         ...modelOptions
     }) {
         super(modelOptions);
@@ -33,6 +34,7 @@ export class WashableModel extends Model {
         this.progressBarWidth = 16;
         this.washTargets = [];
         this.hideProgressBar = hideProgressBar;
+        this.washRadiusScale = washRadiusScale;
     }
 
     // 콜백 함수 오버라이드
@@ -117,7 +119,8 @@ export class WashableModel extends Model {
     // hit에는 uv 정보가 포함되어 있습니다.
     // canvas를 hit의 uv정보에 기반하여 수정하고, texture를 업데이트합니다.
     // dirty 정도를 계산하여 wash progress를 업데이트합니다.
-    wash(hit, radius = this.washRadius, strengthMultiplier = 1) {
+    // FPS당 동일 성능을 내도록 deltaTime을 적용합니다.
+    wash(hit, radius = this.washRadius, strengthMultiplier = 1, delta = 0.016 /* 60fps 기준 */) {
         if (!hit?.object || !hit.uv) return;
 
         const target = this.washTargets.find((item) => item.mesh === hit.object);
@@ -125,7 +128,8 @@ export class WashableModel extends Model {
 
         const x = hit.uv.x * this.maskSize;
         const y = hit.uv.y * this.maskSize;
-        const strength = Math.min(Math.max(this.washStrength * strengthMultiplier, 0), 1);
+        const strength = Math.min(Math.max(this.washStrength * strengthMultiplier, 0), 1) * delta * 30; // 보정값 30
+        radius = radius * this.washRadiusScale; // 보정값 적용
         // 가장자리가 부드러운 원 모양으로 지워질 수 있게 그라데이션을 사용합니다.
         const gradient = target.context.createRadialGradient(x, y, 0, x, y, radius);
         const dirtyBefore = this.measureDirtyAmount(target, x, y, radius);
