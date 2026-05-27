@@ -12,6 +12,7 @@ export class WashableModel extends Model {
         maskSize = 1024,
         cleanTargetScore = 28000,
         progressSampleStep = 4,
+        hideProgressBar = false,
         ...modelOptions
     }) {
         super(modelOptions);
@@ -29,8 +30,9 @@ export class WashableModel extends Model {
         this.progressUpdateTime = 0;
         this.progressBillboard = null;
         this.progressFill = null;
-        this.progressBarWidth = 1;
+        this.progressBarWidth = 16;
         this.washTargets = [];
+        this.hideProgressBar = hideProgressBar;
     }
 
     // 콜백 함수 오버라이드
@@ -202,8 +204,7 @@ export class WashableModel extends Model {
         box.getCenter(center);
         box.getSize(size);
 
-        this.progressBarWidth = Math.max(6, size.x * 0.35);
-        const barHeight = Math.max(0.35, this.progressBarWidth * 0.06);
+        const barHeight = this.progressBarWidth * 0.06;
 
         const backgroundMaterial = new THREE.MeshBasicMaterial({
             color: 0x121820,
@@ -244,6 +245,12 @@ export class WashableModel extends Model {
 
     update(delta, camera) {
         if (!this.progressBillboard || !this.progressFill) return;
+        if (this.hideProgressBar) {
+            this.progressBillboard.visible = false;
+            return;
+        } else {
+            this.progressBillboard.visible = true;
+        }
 
         this.progressUpdateTime -= delta;
         if (this.progressUpdateTime <= 0) {
