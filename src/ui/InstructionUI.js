@@ -1,51 +1,33 @@
 import * as THREE from 'three';
+import { TextSpriteUI } from './TextSpriteUI.js';
 
+// 기본적으로 TextSpriteUI이지만, 화면 resize에 대응하여 위치를 조정합니다.
 export class InstructionUI {
     constructor({ camera }) {
         this.camera = camera;
-        this.canvas = document.createElement('canvas');
-        this.canvas.width = 512;
-        this.canvas.height = 200;
-        this.context = this.canvas.getContext('2d');
-        this.texture = new THREE.CanvasTexture(this.canvas);
-        this.material = new THREE.SpriteMaterial({
-            map: this.texture,
-            transparent: true,
-            depthTest: false,
-            depthWrite: false,
+        this.textUI = new TextSpriteUI({
+            parent: camera,
+            width: 512,
+            height: 200,
+            lines: [
+                '세차 알바로 등록금을 벌자!',
+                'WASD 이동',
+                'Shift 달리기 / Space 점프 / C 앉기',
+                '좌클릭 세척 / R 장전',
+                'ESC 일시정지',
+            ],
+            fontSize: 24,
+            fontWeight: 600,
+            textAlign: 'left',
+            paddingX: 28,
+            background: 'rgba(14, 18, 24, 0.62)',
+            stroke: 'rgba(255, 255, 255, 0.28)',
+            lineWidth: 2,
+            renderOrder: 20,
         });
-        this.sprite = new THREE.Sprite(this.material);
+        this.sprite = this.textUI.sprite;
 
         this.updateLayout();
-        this.sprite.renderOrder = 20;
-        this.camera.add(this.sprite);
-
-        this.draw();
-    }
-
-    draw() {
-        const ctx = this.context;
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        ctx.fillStyle = 'rgba(14, 18, 24, 0.62)';
-        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(2, 2, this.canvas.width - 4, this.canvas.height - 4);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.font = '120 24px Arial, sans-serif';
-
-        ctx.fillText('세차 알바로 등록금을 벌자!', 28, 35);
-        ctx.fillText('WASD 이동', 28, 70);
-        ctx.fillText('Shift 달리기 / Space 점프 / C 앉기', 28, 105);
-        ctx.fillText('좌클릭 세척 / R 장전', 28, 140);
-        ctx.fillText('ESC 일시정지', 28, 175);
-
-        this.texture.needsUpdate = true;
     }
 
     updateLayout() {

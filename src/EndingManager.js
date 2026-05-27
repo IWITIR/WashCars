@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { TextSpriteUI } from './ui/TextSpriteUI.js';
 
 // 엔딩 상태를 관리합니다. 기존 월드 씬 안에서 캐릭터를 보여주고 카메라 연출만 바꿉니다.
 export class EndingManager {
@@ -29,27 +30,29 @@ export class EndingManager {
         this.biker = null;
         this.mixer = null;
 
-        this.promptSprite = this.createTextSprite({
+        this.promptUI = new TextSpriteUI({
+            parent: this.camera,
             width: 640,
             height: 96,
             lines: ['목표 달성! E 키로 엔딩 보기'],
             fontSize: 34,
             background: 'rgba(14, 18, 24, 0.72)',
             stroke: 'rgba(78, 195, 255, 0.75)',
+            visible: false,
         });
-        this.promptSprite.visible = false;
-        this.camera.add(this.promptSprite);
+        this.promptSprite = this.promptUI.sprite;
 
-        this.thanksSprite = this.createTextSprite({
+        this.thanksUI = new TextSpriteUI({
+            parent: this.camera,
             width: 820,
             height: 180,
             lines: ['우승!', '플레이해주셔서 감사합니다'],
             fontSize: 48,
             background: 'rgba(7, 16, 24, 0.68)',
             stroke: 'rgba(255, 255, 255, 0.55)',
+            visible: false,
         });
-        this.thanksSprite.visible = false;
-        this.camera.add(this.thanksSprite);
+        this.thanksSprite = this.thanksUI.sprite;
 
         this.endingLight = new THREE.PointLight(0x4ec3ff, 350, 80);
         this.endingLight.position.set(0, 14, 0);
@@ -142,39 +145,5 @@ export class EndingManager {
             Math.sin(angle) * radius
         );
         this.camera.lookAt(this.target);
-    }
-
-    createTextSprite({ width, height, lines, fontSize, background, stroke }) {
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-
-        ctx.fillStyle = background;
-        ctx.fillRect(0, 0, width, height);
-        ctx.strokeStyle = stroke;
-        ctx.lineWidth = 5;
-        ctx.strokeRect(3, 3, width - 6, height - 6);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = `700 ${fontSize}px Arial, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        const lineHeight = fontSize * 1.25;
-        const startY = height * 0.5 - (lines.length - 1) * lineHeight * 0.5;
-        for (let i = 0; i < lines.length; i += 1) {
-            ctx.fillText(lines[i], width * 0.5, startY + i * lineHeight);
-        }
-
-        const texture = new THREE.CanvasTexture(canvas);
-        const material = new THREE.SpriteMaterial({
-            map: texture,
-            transparent: true,
-            depthTest: false,
-            depthWrite: false,
-        });
-        const sprite = new THREE.Sprite(material);
-        sprite.renderOrder = 200;
-        return sprite;
     }
 }
