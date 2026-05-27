@@ -260,7 +260,7 @@ export class LaptopUpgradeUI {
             y: 238,
             title: '면적당 보수',
             upgradeKey: 'rewardPerArea',
-            descriptionLines: ['세차한 면적당', '획득 보수가 증가합니다.'],
+            descriptionLines: ['세차량 당', '획득 보수가 증가합니다.'],
             buttonRect: this.rewardPerAreaButtonRect,
         });
         this.drawUpgradeCard(ctx, {

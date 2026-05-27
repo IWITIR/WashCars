@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import Stats from 'three/addons/libs/stats.module.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { Player } from './Player.js';
 import { loadModels } from './LoadModels.js';
 import { setupLighting } from './SetupLighting.js';
@@ -12,6 +15,7 @@ import { InstructionUI } from './ui/InstructionUI.js';
 import { MoneyEffect } from './ui/MoneyEffect.js';
 import { EconomyManager } from './EconomyManager.js';
 import { CarChange } from './CarChange.js';
+import { EndingManager } from './EndingManager.js';
 import * as Collision from './CollisionGroup.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 
@@ -28,6 +32,12 @@ scene.add(camera);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+
+const composer = new EffectComposer(renderer);
+const worldRenderPass = new RenderPass(scene, camera);
+const outputPass = new OutputPass();
+composer.addPass(worldRenderPass);
+composer.addPass(outputPass);
 
 // 조명 세팅
 setupLighting(scene, camera);
@@ -65,7 +75,6 @@ if (masterVolumeSlider && masterVolumeValue) {
 const player = new Player({
     world,
     startPos: new THREE.Vector3(30, 8, 5), // 플레이어 시작 위치 (원점에서 약간 뒤쪽)
-    collisionGroups: Collision.collisionPlayer,
     audioManager,
 });
 const washGun = new WashGun({ player, camera, scene });
@@ -114,6 +123,19 @@ const cameraManager = new CameraManager({
     },
 });
 
+// 엔딩 매니저 추가
+const endingManager = new EndingManager({
+    composer,
+    worldScene: scene,
+    worldCamera: camera,
+    worldRenderPass,
+    outputPass,
+    cameraManager,
+    player,
+    washGun,
+    economyManager,
+});
+
 // 레이캐스트를 위한 마우스 위치 업데이트
 window.addEventListener('mousemove', (e) => {
     mousePos.set(e.clientX / window.innerWidth * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
@@ -147,17 +169,21 @@ function gameUpdate() {
     const delta = clock.getDelta();
     player.update(delta, cameraManager.viewQuaternion);
     cameraManager.update(delta);
+    washGun.setMaxWaterAmount(economyManager.getMaxWaterAmount());
     washGun.update(delta);
     moneyEffect.update(delta);
-    carChange.update(delta);
+    if (!endingManager.isStarted) {
+        carChange.update(delta);
+    }
+    endingManager.update(delta);
 
     // 커서 기준 물줄기 타겟 계산 (히트가 없으면 전방 고정 거리)
     raycaster.setFromCamera(centerPos, camera);
     sprayTarget.copy(raycaster.ray.origin).addScaledVector(raycaster.ray.direction, maxSprayDistance);
 
     // 물을 쏘고 있을 때의 충돌(때 지우기) 연산
-    if (cameraManager.mode === 'world' && !carChange.isChanging && isWashing && washGun.waterFillLevel > 0) {
-        washGun.waterFillLevel = Math.max(0, washGun.waterFillLevel - delta * economyManager.getWaterDrainRate());
+    if (!endingManager.isStarted && cameraManager.mode === 'world' && !carChange.isChanging && isWashing && washGun.waterAmount > 0) {
+        washGun.consumeWater(delta * 0.5);
         audioManager.play('water_hose', { position: player.rigidBody.translation() });
 
         const activeCar = carChange.getActiveCar();
@@ -190,7 +216,7 @@ function gameUpdate() {
     }
 
     washGun.updateWaterStream(
-        cameraManager.mode === 'world' && !carChange.isChanging && isWashing && washGun.waterFillLevel > 0,
+        !endingManager.isStarted && cameraManager.mode === 'world' && !carChange.isChanging && isWashing && washGun.waterAmount > 0,
         sprayTarget,
         economyManager.getWashRadius()
     );
@@ -204,7 +230,7 @@ function gameUpdate() {
     laptopUpgradeUI.draw();
 
     stats.update();
-    renderer.render(scene, cameraManager.camera);
+    composer.render();
     world.step(); // 물리 시뮬레이션 한 스텝 진행
     // console.log(renderer.info.render); 
 }
@@ -214,8 +240,10 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
     moneyUI.updateLayout();
     instructionUI.updateLayout();
+    endingManager.updateLayout();
 });
 
 gameUpdate();

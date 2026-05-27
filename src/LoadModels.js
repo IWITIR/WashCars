@@ -40,7 +40,7 @@ export function loadModels({ scene, world }) {
         world,
         path: './glb/laptop_scrn.glb',
         isHollow: false,
-        collisionGroups: Collision.collisionInteractable,
+        collisionGroups: Collision.collisionSM,
     });
     scene.add(laptop_scrn.group);
 
@@ -56,7 +56,7 @@ export function loadModels({ scene, world }) {
         world,
         path: './glb/muscle_car.glb',
         isHollow: false,
-        collisionGroups: Collision.collisionNone,
+        collisionGroups: Collision.collisionSM,
         preserveMaterialMaps: true,
         // 투명 재질 제거 (에셋 호환 문제)
         preserveMaterialState: false,
@@ -79,7 +79,7 @@ export function loadModels({ scene, world }) {
         world,
         path: './glb/dacia.glb',
         isHollow: false,
-        collisionGroups: Collision.collisionNone,
+        collisionGroups: Collision.collisionSM,
         preserveMaterialMaps: true,
         // 투명 재질 제거 (에셋 호환 문제)
         preserveMaterialState: false,

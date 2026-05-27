@@ -8,7 +8,6 @@ export class Player {
         world,
         audioManager = null,
         startPos = { x: 0, y: 0, z: 0 },
-        collisionGroups = collisionPlayer
     }) {
         this.world = world;
         this.audioManager = audioManager;
@@ -34,7 +33,7 @@ export class Player {
         this.eyePosition = new THREE.Vector3(startPos.x, startPos.y + this.eyeHeightOffset, startPos.z);
 
         const colliderDesc = RAPIER.ColliderDesc.capsule(halfHeight, radius)
-            .setCollisionGroups(collisionGroups);
+            .setCollisionGroups(collisionPlayer);
         this.collider = this.world.createCollider(colliderDesc, this.rigidBody);
 
         // Rapier 내장 캐릭터 컨트롤러 (벽 미끄러짐, 바닥 감지 등 자동화)
@@ -168,7 +167,12 @@ export class Player {
 
         // --- [C] Rapier 캐릭터 컨트롤러 충돌 연산 ---
         // 벽을 뚫지 않고 미끄러지도록 최종 허용된 이동량을 계산
-        this.characterController.computeColliderMovement(this.collider, desiredTranslation);
+        this.characterController.computeColliderMovement(
+            this.collider,
+            desiredTranslation,
+            undefined,
+            collisionPlayer,
+        );
         const correctedMovement = this.characterController.computedMovement();
 
         // 바닥에 닿았다면 중력 가속도 초기화 (계속 떨어지는 것 방지)

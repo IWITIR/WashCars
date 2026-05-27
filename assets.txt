@@ -13,7 +13,11 @@ Dodge Challenger - Muscle Car - Low-Poly | sketchfab (free-standard)
 https://sketchfab.com/3d-models/dodge-challenger-muscle-car-low-poly-4c741c8d40c34ebe8b999e5a2823d80f 
 
 dacia:
+old car | sketchfab (free-standard)
+https://sketchfab.com/3d-models/old-car-564fc37061494294889ef420bdade877
 
+biker:
+from Mixamo
 
 sounds-
 footsteps sound:
@@ -47,3 +51,7 @@ https://freesound.org/people/GiocoSound/sounds/401558/
 casher:
 old cash register open and close with a bing | freesound.org (CC0)
 https://freesound.org/people/clubmydia+/sounds/584168/
+
+clapping:
+Clapping Large Crowd at Choir Concert 18 | freesound.org (CC0)
+https://freesound.org/people/pluralz/sounds/735578/
