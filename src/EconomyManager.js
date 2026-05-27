@@ -118,8 +118,8 @@ export class EconomyManager {
         return 1 + this.getUpgradeLevel('cleanPower') * 0.2;
     }
 
-    getWaterDrainRate() {
-        return Math.max(0.01, 0.5 - this.getUpgradeLevel('waterTank') * 0.05);
+    getMaxWaterAmount() {
+        return 1 + this.getUpgradeLevel('waterTank') * 0.35;
     }
 
     getCompletionReward() {

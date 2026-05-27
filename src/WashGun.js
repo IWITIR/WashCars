@@ -20,6 +20,8 @@ export class WashGun {
         this.waterBallUniforms = null;
         this.worldUpFromWaterball = new THREE.Vector3(0, 1, 0); // 워터볼 기준 월드 업벡터
         this.inverseWorldQuaternion = new THREE.Quaternion(); // 월드->워터볼 좌표 변환용 쿼터니언 캐시 변수
+        this.maxWaterAmount = 1;
+        this.waterAmount = this.maxWaterAmount;
         this.waterFillLevel = 1;
 
         // bobbing
@@ -29,7 +31,7 @@ export class WashGun {
         // 재장전
         this.reloadTime = 0;
         this.isReloading = false;
-        this.reloadStartFillLevel = 1; // 재장전 시작 시점의 fill level을 저장하는 변수
+        this.reloadStartWaterAmount = this.waterAmount; // 재장전 시작 시점의 물 양을 저장하는 변수
         this.fuelBasePosition = new THREE.Vector3(); // 코드레벨 애니메이션을 위해 위치 캐시
         this.fuelBaseRotation = new THREE.Euler();
 
@@ -257,8 +259,35 @@ export class WashGun {
 
     update(delta) {
         this.updateReload(delta);
+        this.updateWaterFillLevel();
         this.updateWaterBall(delta);
         this.updateBob(delta);
+    }
+
+    setMaxWaterAmount(maxWaterAmount) {
+        const previousMaxWaterAmount = this.maxWaterAmount;
+        this.maxWaterAmount = Math.max(1, maxWaterAmount);
+
+        if (this.waterAmount >= previousMaxWaterAmount) {
+            this.waterAmount = this.maxWaterAmount;
+        } else {
+            this.waterAmount = Math.min(this.waterAmount, this.maxWaterAmount);
+        }
+
+        this.updateWaterFillLevel();
+    }
+
+    consumeWater(amount) {
+        if (amount <= 0) return;
+
+        this.waterAmount = Math.max(0, this.waterAmount - amount);
+        this.updateWaterFillLevel();
+    }
+
+    updateWaterFillLevel() {
+        this.waterFillLevel = this.maxWaterAmount > 0
+            ? THREE.MathUtils.clamp(this.waterAmount / this.maxWaterAmount, 0, 1)
+            : 0;
     }
 
     updateWaterStream(isActive, targetPoint, washRadius = this.baseWashRadius) {
@@ -364,7 +393,7 @@ export class WashGun {
         if (this.isReloading || !this.parts.fuel) return false;
 
         this.reloadTime = 0;
-        this.reloadStartFillLevel = this.waterFillLevel;
+        this.reloadStartWaterAmount = this.waterAmount;
         this.isReloading = true;
         return true;
     }
@@ -388,8 +417,9 @@ export class WashGun {
         const spinAmount = -Math.sin(reloadMotionProgress * Math.PI);
         // fillAmount: 65%부터 0->1 ease inOut
         const fillProgress = this.easeInOut(Math.max((progress - 0.65) / 0.35, 0));
-        // 재장전 전 fillLevel부터 1까지 보간
-        this.waterFillLevel = THREE.MathUtils.lerp(this.reloadStartFillLevel, 1, fillProgress);
+        // 재장전 전 물 양부터 최대 물 양까지 보간
+        this.waterAmount = THREE.MathUtils.lerp(this.reloadStartWaterAmount, this.maxWaterAmount, fillProgress);
+        this.updateWaterFillLevel();
 
         fuel.position.set(
             this.fuelBasePosition.x,
@@ -407,7 +437,8 @@ export class WashGun {
             fuel.position.copy(this.fuelBasePosition);
             fuel.rotation.copy(this.fuelBaseRotation);
             this.isReloading = false;
-            this.waterFillLevel = 1;
+            this.waterAmount = this.maxWaterAmount;
+            this.updateWaterFillLevel();
         }
     }
 
