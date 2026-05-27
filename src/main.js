@@ -1,8 +1,5 @@
 import * as THREE from 'three';
 import Stats from 'three/addons/libs/stats.module.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { Player } from './Player.js';
 import { loadModels } from './LoadModels.js';
 import { setupLighting } from './SetupLighting.js';
@@ -32,12 +29,6 @@ scene.add(camera);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-
-const composer = new EffectComposer(renderer);
-const worldRenderPass = new RenderPass(scene, camera);
-const outputPass = new OutputPass();
-composer.addPass(worldRenderPass);
-composer.addPass(outputPass);
 
 // 조명 세팅
 setupLighting(scene, camera);
@@ -125,14 +116,12 @@ const cameraManager = new CameraManager({
 
 // 엔딩 매니저 추가
 const endingManager = new EndingManager({
-    composer,
-    worldScene: scene,
-    worldCamera: camera,
-    worldRenderPass,
-    outputPass,
+    scene,
+    camera,
     cameraManager,
     player,
     washGun,
+    washableModels,
     economyManager,
 });
 
@@ -230,7 +219,7 @@ function gameUpdate() {
     laptopUpgradeUI.draw();
 
     stats.update();
-    composer.render();
+    renderer.render(scene, camera);
     world.step(); // 물리 시뮬레이션 한 스텝 진행
     // console.log(renderer.info.render); 
 }
@@ -240,7 +229,6 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    composer.setSize(window.innerWidth, window.innerHeight);
     moneyUI.updateLayout();
     instructionUI.updateLayout();
     endingManager.updateLayout();
