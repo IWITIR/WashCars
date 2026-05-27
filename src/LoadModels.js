@@ -67,10 +67,10 @@ export function loadModels({ scene, world }) {
             depthWrite: true,
             alphaTest: 0,
         }),
-
+        hideProgressBar: false,
     });
     muscle_car.rescale(6.0);
-    muscle_car.setPosition(0, 0, 10000);
+    muscle_car.setPosition(0, 0, 0);
     scene.add(muscle_car.group);
 
     const dacia = new WashableModel({
@@ -88,14 +88,15 @@ export function loadModels({ scene, world }) {
             depthWrite: true,
             alphaTest: 0,
         }),
+        hideProgressBar: true,
     });
-    dacia.setPosition(0, 0, 0);
     dacia.setRotation(0, Math.PI / 2, 0);
+    dacia.setPosition(0, 0, 300);
     dacia.rescale(18.0);
     scene.add(dacia.group);
 
     return {
-        muscle_car,
+        garageDoor,
         laptop_scrn,
         washableModels: [muscle_car, dacia],
     };

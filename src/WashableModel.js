@@ -197,6 +197,7 @@ export class WashableModel extends Model {
         this.updateProgressFill();
     }
 
+    // 월드 좌표계 기준으로 모델 크기를 재서 그 위에 항상 보이는 세척 진척도 표시판을 생성합니다.
     createProgressBillboard() {
         const box = new THREE.Box3().setFromObject(this.model);
         const center = new THREE.Vector3();
@@ -221,7 +222,6 @@ export class WashableModel extends Model {
 
         this.progressBillboard = new THREE.Group();
         this.progressBillboard.name = 'WashProgressBillboard';
-        this.progressBillboard.position.set(center.x, center.y + size.y * 0.65, center.z);
         this.progressBillboard.renderOrder = 100;
 
         const background = new THREE.Mesh(
@@ -241,6 +241,7 @@ export class WashableModel extends Model {
         this.progressBillboard.add(background);
         this.progressBillboard.add(this.progressFill);
         this.group.add(this.progressBillboard);
+        this.progressBillboard.position.set(0, size.y * 1.2, 0);
     }
 
     update(delta, camera) {

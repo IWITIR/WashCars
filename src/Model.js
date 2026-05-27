@@ -48,6 +48,7 @@ export class Model {
         );
     }
 
+    // 월드 좌표계 기준으로 현재 모델을 감싸는 박스 모양의 콜라이더를 생성합니다.
     setupPhysics() {
         if (!this.world || !this.model) return;
 
@@ -221,6 +222,8 @@ export class Model {
         this.setupPhysics();
     }
 
+    // 모델의 위치를 바꾸는 함수입니다. Rapier 콜라이더는 Three와 별개로 수정해야 해서
+    // 모델을 이동 후 콜라이더에도 적용해주는 방식으로 구현했습니다.
     setPosition(x = 0, y = 0, z = 0) {
         this.group.position.set(x, y, z);
         this.group.updateMatrixWorld(true);
@@ -231,6 +234,7 @@ export class Model {
         this.rigidBody.setTranslation(this.groupWorldPosition, true);
     }
 
+    // 마찬가지로, 모델을 회전한뒤 콜라이더에 적용해주는 방식을 구현했습니다.
     setRotation(x = 0, y = 0, z = 0, { rebuildPhysics = true } = {}) {
         this.group.rotation.set(x, y, z);
         this.group.updateMatrixWorld(true);
