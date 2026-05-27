@@ -123,6 +123,7 @@ const endingManager = new EndingManager({
     washGun,
     washableModels,
     economyManager,
+    audioManager,
 });
 
 // 레이캐스트를 위한 마우스 위치 업데이트

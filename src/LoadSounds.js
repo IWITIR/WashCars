@@ -6,72 +6,80 @@ export async function loadSounds(camera) {
         'water_hose', 
         './sound/water_hose_pitchdown.wav', 
         {
-        loop: true,
-        volume: 0.35,
+            loop: true,
+            volume: 0.35,
     });
 
     await audioManager.load(
         'water_hit', 
         './sound/water_hitting.wav', 
         {
-        loop: true,
-        volume: 0.5,
+            loop: true,
+            volume: 0.5,
     });
 
     await audioManager.load(
         'footstep1', 
         './sound/footstep1.wav', 
         {
-        loop: false,
-        volume: 0.5,
+            loop: false,
+            volume: 0.5,
     });
 
     await audioManager.load(
         'footstep2', 
         './sound/footstep2.wav', 
         {
-        loop: false,
-        volume: 0.5,
+            loop: false,
+            volume: 0.5,
     });
 
     await audioManager.load(
         'reload',
         './sound/reload.wav',
         {
-        loop: false,
-        volume: 1,
+            loop: false,
+            volume: 1,
     });
 
     await audioManager.load(
         'mouse_click',
         './sound/mouse_click.wav',
         {
-        loop: false,
-        volume: 0.5,
+            loop: false,
+            volume: 0.5,
     });
 
     await audioManager.load(
         'bgm',
         './sound/bgm.wav',
         {
-        loop: true,
-        volume: 0.3,
+            loop: true,
+            volume: 0.3,
     });
 
     await audioManager.load(
         'casher',
         './sound/casher.wav',
         {
-        loop: false,
-        volume: 0.5,
+            loop: false,
+            volume: 0.5,
     });
 
     await audioManager.load(
         'car_engine',
         './sound/car_engine.wav',
         {
-        loop: true,
-        volume: 0.4,
+            loop: true,
+            volume: 0.4,
+    });
+
+    await audioManager.load(
+        'clap',
+        './sound/clapping.wav',
+        {
+            loop: false,
+            volume: 0.5,
     });
 
     return audioManager;

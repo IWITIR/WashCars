@@ -7,6 +7,7 @@ export class EndingManager {
         scene,
         camera,
         cameraManager,
+        audioManager,
         player,
         washGun,
         washableModels = [],
@@ -20,6 +21,7 @@ export class EndingManager {
         this.washGun = washGun;
         this.washableModels = washableModels;
         this.economyManager = economyManager;
+        this.audioManager = audioManager;
         this.targetMoney = targetMoney;
         this.isStarted = false;
         this.orbitTime = 0;
@@ -90,6 +92,8 @@ export class EndingManager {
         for (const model of this.washableModels) {
             model.group.visible = false;
         }
+
+        this.audioManager.play('clap');
     }
 
     async loadBiker() {
