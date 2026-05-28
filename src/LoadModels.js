@@ -99,9 +99,21 @@ export function loadModels({ scene, world }) {
     dacia.rescale(18.0);
     scene.add(dacia.group);
 
+    const models = [
+        garage,
+        garageDoor,
+        table,
+        laptop,
+        laptop_scrn,
+        lamp,
+        muscle_car,
+        dacia,
+    ];
+
     return {
         garageDoor,
         laptop_scrn,
         washableModels: [muscle_car, dacia],
+        ready: Promise.all(models.map((model) => model.ready)),
     };
 }

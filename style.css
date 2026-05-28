@@ -1,18 +1,56 @@
-:root {
-    --color-bg-app: #222222;
-    --color-ui-popup-bg: rgba(0, 0, 0, 0.55);
-    --color-ui-popup-text: #ffffff;
-}
-
 
 body {
     margin: 0;
     overflow: hidden;
-    background-color: var(--color-bg-app);
+    background-color: #222222;
 }
 
 canvas {
     display: block;
+}
+
+.start-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 28px;
+    background: #14171d;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    z-index: 200;
+    opacity: 1;
+    transition: opacity 0.45s ease;
+}
+
+.start-overlay.hide {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.start-message {
+    max-width: min(86vw, 720px);
+    font-size: clamp(28px, 6vw, 56px);
+    font-weight: 800;
+}
+
+.start-button {
+    min-width: 132px;
+    min-height: 46px;
+    padding: 0 28px;
+    border: 1px solid rgba(255, 255, 255, 0.36);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font: 700 18px Arial, sans-serif;
+    cursor: pointer;
+}
+
+.start-button:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* 시각적인 클릭 가이드를 위한 작은 십자선(커서) */
@@ -47,8 +85,8 @@ canvas {
     align-items: center;
     gap: 46px;
 
-    background-color: var(--color-ui-popup-bg);
-    color: var(--color-ui-popup-text);
+    background-color: rgba(0, 0, 0, 0.55);
+    color: #ffffff;
     font-family: Arial, sans-serif;
     font-weight: bold;
     text-align: center;

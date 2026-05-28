@@ -29,6 +29,10 @@ export class Model {
         this.inverseGroupMatrix = new THREE.Matrix4();
         this.groupWorldPosition = new THREE.Vector3();
         this.groupWorldQuaternion = new THREE.Quaternion();
+        this.ready = new Promise((resolve, reject) => {
+            this.resolveReady = resolve;
+            this.rejectReady = reject;
+        });
 
         gltfLoader.load(
             path,
@@ -40,10 +44,12 @@ export class Model {
                 this.isLoaded = true;
                 this.setupPhysics();
                 this.onModelLoaded(); // 콜백 함수 호출 : WashableModel에서 사용
+                this.resolveReady(this);
             },
             undefined,
             (error) => {
                 console.error('Garage GLB load error:', error);
+                this.rejectReady(error);
             }
         );
     }

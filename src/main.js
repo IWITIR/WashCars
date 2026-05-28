@@ -30,6 +30,10 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+const startOverlay = document.getElementById('start-overlay');
+const startMessage = document.getElementById('start-message');
+const startButton = document.getElementById('start-button');
+
 // 조명 세팅
 setupLighting(scene, camera);
 
@@ -42,10 +46,17 @@ const gravity = { x: 0, y: -30, z: 0 }; // 중력은 플레이적으로 조율�
 const world = new RAPIER.World(gravity);
 
 // 모델 임포트
-const { garageDoor, laptop_scrn, washableModels } = loadModels({ scene, world });
+const {
+    garageDoor,
+    laptop_scrn,
+    washableModels,
+    ready: modelsReady,
+} = loadModels({ scene, world });
 
 // 사운드 세팅
 const audioManager = await loadSounds(camera);
+await modelsReady;
+
 // 볼륨 슬라이더
 const masterVolumeSlider = document.getElementById('master-volume');
 const masterVolumeValue = document.getElementById('master-volume-value');
@@ -114,6 +125,27 @@ const cameraManager = new CameraManager({
     },
 });
 
+// 시작 및 로딩 화면을 구성합니다.
+cameraManager.mode = 'start';
+player.setInputEnabled(false);
+camera.position.copy(player.getEyePosition());
+camera.quaternion.copy(cameraManager.viewQuaternion);
+
+function startGame() {
+    if (cameraManager.mode !== 'start') return;
+
+    startOverlay?.classList.add('hide');
+    cameraManager.mode = 'world';
+    player.setInputEnabled(true);
+    cameraManager.lockPointer();
+}
+
+if (startMessage && startButton) {
+    startMessage.textContent = 'Wash Cars';
+    startButton.hidden = false;
+    startOverlay?.addEventListener('click', startGame);
+}
+
 // 엔딩 매니저 추가
 const endingManager = new EndingManager({
     scene,
@@ -136,6 +168,8 @@ let bgmStarted = false;
 // 좌클릭 처리 cameraManager에 전달.
 window.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
+    if (cameraManager.mode === 'start') return;
+
     if (bgmStarted === false) {
         audioManager.play('bgm');
         bgmStarted = true;

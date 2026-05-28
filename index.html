@@ -16,14 +16,20 @@
     </script>
 </head>
 <body>
+    <!-- 시작 및 로딩 화면 -->
+    <div id="start-overlay" class="start-overlay">
+        <div id="start-message" class="start-message">로딩 중...</div>
+        <button id="start-button" class="start-button" type="button" hidden>시작</button>
+    </div>
+
     <div id="cursor"></div>
 
     <!-- 게임 화면을 가리는 UI 팝업 (예: 일시정지 메뉴) -->
     <div id="menu" class="ui-popup">
-        <h2 id="menu-title" class="menu-title">PAUSE</h2>
+        <h2 id="menu-title" class="menu-title">게임 일시정지</h2>
 
         <div id="menu-volume-panel" class="menu-volume-panel">
-            <label for="master-volume" class="menu-label">Master Volume</label>
+            <label for="master-volume" class="menu-label">소리 조절</label>
             <div class="menu-volume-row">
                 <input id="master-volume" class="menu-volume-slider" type="range" min="0" max="100" value="70">
                 <span id="master-volume-value" class="menu-volume-value">70%</span>
