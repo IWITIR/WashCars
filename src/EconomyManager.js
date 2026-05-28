@@ -123,6 +123,6 @@ export class EconomyManager {
     }
 
     getCompletionReward() {
-        return 50000 + this.getUpgradeLevel('completionReward') * 25000;
+        return 500000 + this.getUpgradeLevel('completionReward') * 500000;
     }
 }

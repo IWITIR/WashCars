@@ -101,11 +101,13 @@ export class CarChange {
 
         this.spawnRewardEffect(car);
         this.audioManager.playOneShot('casher');
-        this.economyManager.addMoney(this.reward);
+        const compReward = this.economyManager.getCompletionReward();
+        this.economyManager.addMoney(compReward);
         this.startState('reward');
     }
 
     spawnRewardEffect(car) {
+        const compReward = this.economyManager.getCompletionReward();
         if (car.progressBillboard) {
             car.progressBillboard.getWorldPosition(this.effectPosition);
         } else {
@@ -114,7 +116,7 @@ export class CarChange {
             this.effectPosition.y = box.max.y + 1;
         }
 
-        this.moneyEffect.spawn(this.effectPosition, this.reward);
+        this.moneyEffect.spawn(this.effectPosition, compReward);
     }
 
     prepareNextCar() {
