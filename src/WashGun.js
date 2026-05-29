@@ -2,6 +2,12 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createMaterialFromShader } from './util/createMaterialFromShader.js';
 import { loadShader } from './util/loadShader.js';
+import {
+    RELOAD_DURATION,
+    createReloadFuelClip,
+    getReloadFillProgress,
+    playClipOnce,
+} from './KeyframeAnimations.js';
 
 export class WashGun {
     constructor({ player, camera = player?.camera, scene = player?.scene }) {
@@ -32,8 +38,9 @@ export class WashGun {
         this.reloadTime = 0;
         this.isReloading = false;
         this.reloadStartWaterAmount = this.waterAmount; // 재장전 시작 시점의 물 양을 저장하는 변수
-        this.fuelBasePosition = new THREE.Vector3(); // 코드레벨 애니메이션을 위해 위치 캐시
+        this.fuelBasePosition = new THREE.Vector3(); // 재장전 애니메이션 기준 위치
         this.fuelBaseRotation = new THREE.Euler();
+        this.reloadAnimation = null;
 
         // 물줄기
         this.muzzlePoint = null;
@@ -258,6 +265,7 @@ export class WashGun {
     }
 
     update(delta) {
+        this.updateReloadAnimation(delta);
         this.updateReload(delta);
         this.updateWaterFillLevel();
         this.updateWaterBall(delta);
@@ -390,65 +398,53 @@ export class WashGun {
 
     // 재장전을 성공적으로 시작하면 true, 아니면 false를 반환
     reload() {
-        if (this.isReloading || !this.parts.fuel) return false;
+        const fuel = this.parts.fuel;
+        if (this.isReloading || !fuel) return false;
 
+        fuel.position.copy(this.fuelBasePosition);
+        fuel.rotation.copy(this.fuelBaseRotation);
         this.reloadTime = 0;
         this.reloadStartWaterAmount = this.waterAmount;
         this.isReloading = true;
+        this.playReloadAnimation();
         return true;
     }
 
-    // 코드레벨에서 애니메이션 부여
-    updateReload(delta) {
+    playReloadAnimation() {
         const fuel = this.parts.fuel;
-        if (!this.isReloading || !fuel) return;
+        const clip = createReloadFuelClip(this.fuelBasePosition, this.fuelBaseRotation);
 
-        this.reloadTime += delta;
+        this.reloadAnimation = playClipOnce(fuel, clip, () => this.finishReloadAnimation());
+    }
 
-        const progress = Math.min(this.reloadTime / 0.85, 1);
-        // 65%까지 탄창 모션을 끝내고, 이후는 물 차오르는 구간으로 둡니다.
-        const reloadMotionProgress = Math.min(progress / 0.65, 1);
-        // outProgress: 전체 reload의 25%까지 탄창이 빠짐
-        const outProgress = this.easeOut(Math.min(progress / 0.25, 1));
-        // inProgress: 35%부터 65%까지 탄창이 다시 들어감 (clamp 0~1)
-        const inProgress = this.easeInOut(Math.min(Math.max((progress - 0.35) / 0.3, 0), 1));
-        // holdAmount: 0->1->0, 탄창이 빠져 있는 정도
-        const holdAmount = outProgress * (1 - inProgress);
-        const spinAmount = -Math.sin(reloadMotionProgress * Math.PI);
-        // fillAmount: 65%부터 0->1 ease inOut
-        const fillProgress = this.easeInOut(Math.max((progress - 0.65) / 0.35, 0));
-        // 재장전 전 물 양부터 최대 물 양까지 보간
-        this.waterAmount = THREE.MathUtils.lerp(this.reloadStartWaterAmount, this.maxWaterAmount, fillProgress);
-        this.updateWaterFillLevel();
-
-        fuel.position.set(
-            this.fuelBasePosition.x,
-            this.fuelBasePosition.y - 0.55 * holdAmount,
-            this.fuelBasePosition.z + 0.12 * holdAmount
-        );
-
-        fuel.rotation.set(
-            this.fuelBaseRotation.x + Math.PI * 1.4 * spinAmount,
-            this.fuelBaseRotation.y,
-            this.fuelBaseRotation.z + Math.PI * 0.25 * spinAmount
-        );
-
-        if (progress >= 1) {
-            fuel.position.copy(this.fuelBasePosition);
-            fuel.rotation.copy(this.fuelBaseRotation);
-            this.isReloading = false;
-            this.waterAmount = this.maxWaterAmount;
-            this.updateWaterFillLevel();
+    updateReloadAnimation(delta) {
+        if (this.reloadAnimation) {
+            this.reloadAnimation.mixer.update(delta);
         }
     }
 
-    // Tweening 헬퍼 함수들
-    easeOut(t) {
-        return 1 - Math.pow(1 - t, 3);
+    finishReloadAnimation() {
+        const fuel = this.parts.fuel;
+
+        fuel.position.copy(this.fuelBasePosition);
+        fuel.rotation.copy(this.fuelBaseRotation);
+        this.reloadAnimation = null;
+        this.isReloading = false;
+        this.waterAmount = this.maxWaterAmount;
+        this.updateWaterFillLevel();
     }
 
-    easeInOut(t) {
-        return t * t * (3 - 2 * t);
+    // 재장전 중 물이 차오르는 값을 갱신합니다.
+    updateReload(delta) {
+        if (!this.isReloading) return;
+
+        this.reloadTime += delta;
+
+        const progress = Math.min(this.reloadTime / RELOAD_DURATION, 1);
+        const fillProgress = getReloadFillProgress(progress);
+        // 재장전 전 물 양부터 최대 물 양까지 보간
+        this.waterAmount = THREE.MathUtils.lerp(this.reloadStartWaterAmount, this.maxWaterAmount, fillProgress);
+        this.updateWaterFillLevel();
     }
 
     // 할당된 player가 움직이는지 판단하는 헬퍼함수.

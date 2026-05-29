@@ -1,4 +1,11 @@
 import * as THREE from 'three';
+import {
+    createCarMoveClip,
+    createGarageDoorMoveClip,
+    playClipOnce,
+} from './KeyframeAnimations.js';
+
+const REWARD_DELAY = 0.6;
 
 export class CarChange {
     constructor({
@@ -23,6 +30,9 @@ export class CarChange {
         this.playPosition = new THREE.Vector3(0, 0, 0);
         this.outPosition = new THREE.Vector3(0, 0, 300);
         this.effectPosition = new THREE.Vector3();
+        this.doorAnimation = null;
+        this.carAnimation = null;
+        this.animatingCar = null;
 
         this.initializeCars();
     }
@@ -42,56 +52,13 @@ export class CarChange {
         }
 
         this.stateTime += delta;
+        this.updateAnimations(delta);
 
         if (this.state === 'reward') {
-            if (this.stateTime >= 0.6) {
+            if (this.stateTime >= REWARD_DELAY) {
                 this.startState('openDoor');
             }
             return;
-        }
-
-        if (this.state === 'openDoor') {
-            const progress = this.ease(Math.min(this.stateTime / 1.1, 1));
-            this.moveGarageDoor(this.doorClosedY, this.doorOpenY, progress);
-
-            if (progress >= 1) {
-                this.audioManager.play('car_engine');
-                this.startState('exitCar');
-            }
-            return;
-        }
-
-        if (this.state === 'exitCar') {
-            const car = this.getActiveCar();
-            const progress = this.ease(Math.min(this.stateTime / 2.2, 1));
-            this.moveCar(car, this.playPosition, this.outPosition, progress);
-
-            if (progress >= 1) {
-                this.prepareNextCar();
-                this.startState('enterCar');
-            }
-            return;
-        }
-
-        if (this.state === 'enterCar') {
-            const car = this.getActiveCar();
-            const progress = this.ease(Math.min(this.stateTime / 2.2, 1));
-            this.moveCar(car, this.outPosition, this.playPosition, progress);
-
-            if (progress >= 1) {
-                this.startState('closeDoor');
-            }
-            return;
-        }
-
-        if (this.state === 'closeDoor') {
-            const progress = this.ease(Math.min(this.stateTime / 1.1, 1));
-            this.moveGarageDoor(this.doorOpenY, this.doorClosedY, progress);
-
-            if (progress >= 1) {
-                this.audioManager.stop('car_engine');
-                this.startState('idle');
-            }
         }
     }
 
@@ -150,27 +117,84 @@ export class CarChange {
         }
     }
 
-    moveGarageDoor(fromY, toY, progress) {
-        const position = this.garageDoor.group.position;
-        this.garageDoor.setPosition(position.x, THREE.MathUtils.lerp(fromY, toY, progress), position.z);
+    updateAnimations(delta) {
+        if (this.doorAnimation) {
+            this.doorAnimation.mixer.update(delta);
+            this.syncModelPosition(this.garageDoor);
+        }
+
+        if (this.carAnimation) {
+            const car = this.animatingCar;
+
+            this.carAnimation.mixer.update(delta);
+            if (this.carAnimation) {
+                this.syncModelPosition(car);
+            }
+        }
     }
 
-    moveCar(car, from, to, progress) {
+    playGarageDoorAnimation(fromY, toY, onFinished) {
+        const clip = createGarageDoorMoveClip(fromY, toY, this.garageDoor.group.position);
+
+        this.doorAnimation?.action.stop();
+        this.doorAnimation = playClipOnce(this.garageDoor.group, clip, () => {
+            this.syncModelPosition(this.garageDoor);
+            this.doorAnimation = null;
+            onFinished?.();
+        });
+    }
+
+    playCarAnimation(car, from, to, onFinished) {
         if (!car) return;
 
-        car.setPosition(
-            THREE.MathUtils.lerp(from.x, to.x, progress),
-            THREE.MathUtils.lerp(from.y, to.y, progress),
-            THREE.MathUtils.lerp(from.z, to.z, progress)
-        );
+        const clip = createCarMoveClip(from, to);
+
+        this.carAnimation?.action.stop();
+        this.animatingCar = car;
+        this.carAnimation = playClipOnce(car.group, clip, () => {
+            this.syncModelPosition(car);
+            this.carAnimation = null;
+            this.animatingCar = null;
+            onFinished?.();
+        });
+    }
+
+    syncModelPosition(model) {
+        model.setPosition(model.group.position.x, model.group.position.y, model.group.position.z);
     }
 
     startState(state) {
         this.state = state;
         this.stateTime = 0;
-    }
 
-    ease(t) {
-        return t * t * (3 - 2 * t);
+        if (state === 'openDoor') {
+            this.playGarageDoorAnimation(this.doorClosedY, this.doorOpenY, () => {
+                this.audioManager.play('car_engine');
+                this.startState('exitCar');
+            });
+            return;
+        }
+
+        if (state === 'exitCar') {
+            this.playCarAnimation(this.getActiveCar(), this.playPosition, this.outPosition, () => {
+                this.prepareNextCar();
+                this.startState('enterCar');
+            });
+            return;
+        }
+
+        if (state === 'enterCar') {
+            this.playCarAnimation(this.getActiveCar(), this.outPosition, this.playPosition, () => {
+                this.startState('closeDoor');
+            });
+            return;
+        }
+
+        if (state === 'closeDoor') {
+            this.playGarageDoorAnimation(this.doorOpenY, this.doorClosedY, () => {
+                this.audioManager.stop('car_engine');
+                this.startState('idle');
+            });
+        }
     }
 }
