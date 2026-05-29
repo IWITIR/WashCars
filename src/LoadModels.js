@@ -93,6 +93,7 @@ export function loadModels({ scene, world }) {
         cleanTargetScore: 20000,
         hideProgressBar: true,
         washRadiusScale: 0.6,
+        startVisible: false, // 두 번째 차량은 처음에 보이지 않도록 설정 (CarChange.js에서 제어)
     });
     dacia.setRotation(0, Math.PI / 2, 0);
     dacia.setPosition(0, 0, 300);
@@ -114,6 +115,7 @@ export function loadModels({ scene, world }) {
         garageDoor,
         laptop_scrn,
         washableModels: [muscle_car, dacia],
+        // main에서 모델 로드 완료를 대기하기 위한 프로미스입니다.
         ready: Promise.all(models.map((model) => model.ready)),
     };
 }

@@ -15,6 +15,7 @@ export class Model {
         preserveMaterialMaps = false,
         preserveMaterialState = true,
         scale = 1,
+        startVisible = true,
     }) {
         this.world = world;
         this.group = new THREE.Group();
@@ -29,6 +30,8 @@ export class Model {
         this.inverseGroupMatrix = new THREE.Matrix4();
         this.groupWorldPosition = new THREE.Vector3();
         this.groupWorldQuaternion = new THREE.Quaternion();
+        // 메인 함수에서 모델 로드 완료를 대기하기 위한 콜백 프로미스입니다. 
+        // LoadModels에서 한번 더 묶인다음 main에서 대기됩니다.
         this.ready = new Promise((resolve, reject) => {
             this.resolveReady = resolve;
             this.rejectReady = reject;
@@ -44,6 +47,7 @@ export class Model {
                 this.isLoaded = true;
                 this.setupPhysics();
                 this.onModelLoaded(); // 콜백 함수 호출 : WashableModel에서 사용
+                this.model.visible = startVisible;
                 this.resolveReady(this);
             },
             undefined,

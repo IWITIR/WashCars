@@ -89,6 +89,9 @@ export class CarChange {
     prepareNextCar() {
         const completedCar = this.getActiveCar();
         if (completedCar) {
+            if (completedCar.model) {
+                completedCar.model.visible = false;
+            }
             completedCar.resetWashProgress();
             completedCar.hideProgressBar = true;
             completedCar.setPosition(this.outPosition.x, this.outPosition.y, this.outPosition.z);
@@ -99,6 +102,9 @@ export class CarChange {
         const nextCar = this.getActiveCar();
         if (!nextCar) return;
 
+        if (nextCar.model) {
+            nextCar.model.visible = true;
+        }
         nextCar.resetWashProgress();
         nextCar.hideProgressBar = false;
         nextCar.setPosition(this.outPosition.x, this.outPosition.y, this.outPosition.z);
