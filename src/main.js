@@ -55,6 +55,7 @@ const postMaterial = createMaterialFromShader({
 const postQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMaterial);
 postScene.add(postQuad);
 
+// 시작 화면 html 가져오기
 const startOverlay = document.getElementById('start-overlay');
 const startMessage = document.getElementById('start-message');
 const startButton = document.getElementById('start-button');
@@ -114,7 +115,7 @@ let isWashing = false;
 const sprayTarget = new THREE.Vector3();
 const maxSprayDistance = 50;
 
-// 메뉴 html 가져오기
+// 일시정지 화면 html 가져오기
 const menuPopup = document.getElementById('menu');
 const menuVolumePanel = document.getElementById('menu-volume-panel');
 

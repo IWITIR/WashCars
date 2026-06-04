@@ -6,7 +6,7 @@ export function setupLighting(scene, camera = null) {
     // 조명 세팅
 
     // 0) 앰비언트 라이트
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
 
     // 1) 맵 중앙 상공에서 아래로 넓게 비추는 라이트
