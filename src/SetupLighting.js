@@ -11,6 +11,7 @@ export function setupLighting(scene, camera = null) {
 
     // 1) 맵 중앙 상공에서 아래로 넓게 비추는 라이트
     const mapCenterPoint = new THREE.PointLight(0xffffff, 10000, 0);
+    mapCenterPoint.castShadow = true;
     mapCenterPoint.position.set(0, 40, 0); // 맵 중앙
     // mapCenterPoint.target.position.set(0, -15, 20); // 수직 ㅇ아래
     scene.add(mapCenterPoint);

@@ -27,6 +27,7 @@ camera.position.set(0, 0, 2);
 scene.add(camera);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.shadowMap.enabled = true;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 

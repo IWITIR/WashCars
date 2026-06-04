@@ -11,6 +11,7 @@ export class Model {
         path,
         isHollow = false,
         collisionGroups = collisionALL,
+        castShadow = false,
         materialOverride = null,
         preserveMaterialMaps = false,
         preserveMaterialState = true,
@@ -41,6 +42,7 @@ export class Model {
             path,
             (gltf) => {
                 this.model = gltf.scene;
+                this.applyShadowSettings(castShadow);
                 this.applyMaterialOverride(materialOverride, preserveMaterialMaps, preserveMaterialState);
                 this.rescale(this.scale, { rebuildPhysics: false });
                 this.group.add(this.model);
@@ -174,6 +176,15 @@ export class Model {
                 preserveMaterialMaps,
                 preserveMaterialState
             );
+        });
+    }
+
+    applyShadowSettings(castShadow) {
+        if (!this.model) return;
+
+        this.model.traverse((child) => {
+            if (!child.isMesh) return;
+            child.castShadow = castShadow;
         });
     }
 

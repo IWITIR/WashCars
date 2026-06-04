@@ -57,6 +57,7 @@ export function loadModels({ scene, world }) {
         path: './glb/muscle_car.glb',
         isHollow: false,
         collisionGroups: Collision.collisionSM,
+        castShadow: true,
         preserveMaterialMaps: true,
         // 투명 재질 제거 (에셋 호환 문제)
         preserveMaterialState: false,
@@ -80,6 +81,7 @@ export function loadModels({ scene, world }) {
         path: './glb/dacia.glb',
         isHollow: false,
         collisionGroups: Collision.collisionSM,
+        castShadow: true,
         preserveMaterialMaps: true,
         // 투명 재질 제거 (에셋 호환 문제)
         preserveMaterialState: false,
