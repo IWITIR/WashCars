@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { collisionALL } from './CollisionGroup.js';
+import { WORLD_BASE } from './RenderOrder.js';
 
 const gltfLoader = new GLTFLoader();
 
@@ -19,9 +20,11 @@ export class Model {
         preserveMaterialState = true,
         scale = 1,
         startVisible = true,
+        renderOrder = WORLD_BASE,
     }) {
         this.world = world;
         this.group = new THREE.Group();
+        this.renderOrder = renderOrder;
         this.model = null;
         this.isLoaded = false;
         this.isHollow = isHollow;
@@ -46,6 +49,7 @@ export class Model {
                 this.model = gltf.scene;
                 this.applyShadowSettings(castShadow, receiveShadow);
                 this.applyMaterialOverride(materialOverride, preserveMaterialMaps, preserveMaterialState);
+                this.applyRenderOrder(this.renderOrder);
                 this.rescale(this.scale, { rebuildPhysics: false });
                 this.group.add(this.model);
                 this.isLoaded = true;
@@ -188,6 +192,15 @@ export class Model {
             if (!child.isMesh) return;
             child.castShadow = castShadow;
             child.receiveShadow = receiveShadow;
+        });
+    }
+
+    applyRenderOrder(renderOrder) {
+        if (!this.model) return;
+
+        this.model.traverse((child) => {
+            if (!child.isMesh) return;
+            child.renderOrder = renderOrder;
         });
     }
 

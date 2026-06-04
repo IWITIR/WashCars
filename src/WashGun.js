@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createMaterialFromShader } from './util/createMaterialFromShader.js';
 import { loadShader } from './util/loadShader.js';
+import * as RenderOrder from './RenderOrder.js';
 import {
     RELOAD_DURATION,
     createReloadFuelClip,
@@ -174,7 +175,7 @@ export class WashGun {
         this.streamGroup = new THREE.Group();
         this.streamGroup.name = 'WashGunWaterStream';
         this.streamGroup.visible = false;
-        this.streamGroup.renderOrder = 10; // 다른 메시에 덮어씌워지지 않게 높은 우선순위
+        this.streamGroup.renderOrder = RenderOrder.WASHGUN_STREAM;
         this.streamGroup.add(this.streamConeMesh);
         this.streamGroup.add(this.streamSprayPoints);
 
@@ -245,10 +246,10 @@ export class WashGun {
             waterBallMaterial
         );
         innerMesh.material = waterBallMaterial;
-        innerMesh.renderOrder = 1; // 내부 워터볼이 유리보다 나중에 렌더링되도록 설정
+        innerMesh.renderOrder = RenderOrder.WASHGUN_WATER;
         glassMesh.add(innerMesh);
 
-        glassMesh.renderOrder = 0;
+        glassMesh.renderOrder = RenderOrder.WASHGUN_GLASS;
 
         waterBallUniforms.uBallCenter.value.copy(ballCenter);
         waterBallUniforms.uBallRadius.value = ballRadius;

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Model } from './Model.js';
+import * as RenderOrder from './RenderOrder.js';
 
 // 세척 가능한 모델로, Model을 확장합니다. : 메시마다 dirt mesh를 생성합니다.
 // 세척의 근본 원리는 canvas에 2d로 그려지는 texture를 메시의 alphaMap으로 사용하는 것입니다.
@@ -99,7 +100,10 @@ export class WashableModel extends Model {
         const dirtMesh = new THREE.Mesh(sourceMesh.geometry, dirtMaterial);
         dirtMesh.name = `${sourceMesh.name || 'washable'}_dirt`;
         dirtMesh.scale.setScalar(this.dirtScale);
-        dirtMesh.renderOrder = (sourceMesh.renderOrder || 0) + 1;
+        dirtMesh.renderOrder = Math.max(
+            (sourceMesh.renderOrder || RenderOrder.WORLD_BASE) + 1,
+            RenderOrder.WORLD_CAR_DIRT
+        );
         dirtMesh.raycast = THREE.Mesh.prototype.raycast;
         dirtMesh.washableModel = this;
 
@@ -230,20 +234,20 @@ export class WashableModel extends Model {
         // background와 fill을 묶을 그룹입니다.
         this.progressBillboard = new THREE.Group();
         this.progressBillboard.name = 'WashProgressBillboard';
-        this.progressBillboard.renderOrder = 100;
+        this.progressBillboard.renderOrder = RenderOrder.UI_BILLBOARD;
 
         // background과 fill 메시를 생성합니다. fill은 초기에는 0으로 안보이게 설정합니다.
         const background = new THREE.Mesh(
             new THREE.PlaneGeometry(this.progressBarWidth, barHeight),
             backgroundMaterial
         );
-        background.renderOrder = 100;
+        background.renderOrder = RenderOrder.UI_BILLBOARD;
 
         this.progressFill = new THREE.Mesh(
             new THREE.PlaneGeometry(this.progressBarWidth, barHeight),
             fillMaterial
         );
-        this.progressFill.renderOrder = 101; // fill의 renderOrder가 background보다 높아야 합니다.
+        this.progressFill.renderOrder = RenderOrder.UI_BILLBOARD + 1;
         this.progressFill.position.z = 0.01; // 약간 위로 띄움
         this.progressFill.visible = false;
 

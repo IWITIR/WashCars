@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { TextSpriteUI } from './ui/TextSpriteUI.js';
+import { UI_BILLBOARD } from './RenderOrder.js';
 
 const WASH_TARGET_MONEY = 50000;
 
@@ -43,7 +44,7 @@ export class TutorialManager {
             textAlign: 'center',
             background: 'rgba(8, 12, 18, 0.84)',
             stroke: 'rgba(78, 195, 255, 0.75)',
-            renderOrder: 320,
+            renderOrder: UI_BILLBOARD,
             visible: false,
         });
         this.stepUI.setTransform(

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { UI_BILLBOARD } from '../RenderOrder.js';
 
 // 세척시마다 돈이 올라가는 효과입니다.
 // 이것도 canvas에 텍스트를 작성하고 텍스쳐로 만들어서 Three.js 스프라이트에 적용하는 방식으로 구현되어 있습니다. 돈이 올라가는 위치는 trySpawn() 함수의 인자로 전달됩니다.
@@ -58,7 +59,7 @@ export class MoneyEffect {
         sprite.position.x += (Math.random() - 0.5) * 0.2;
         sprite.position.z += (Math.random() - 0.5) * 0.2;
         sprite.scale.set(8, 1, 1);
-        sprite.renderOrder = 100;
+        sprite.renderOrder = UI_BILLBOARD;
 
         this.scene.add(sprite);
         this.effects.push({

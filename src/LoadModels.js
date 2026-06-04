@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Model } from './Model.js';
 import { WashableModel } from './WashableModel.js';
 import * as Collision from './CollisionGroup.js';
+import * as RenderOrder from './RenderOrder.js';
 
 // 모델 에셋 로드 부분을 보기 편하게 분리했습니다.
 export function loadModels({ scene, world }) {
@@ -35,6 +36,7 @@ export function loadModels({ scene, world }) {
         path: './glb/laptop.glb',
         isHollow: false,
         collisionGroups: Collision.collisionSM,
+        renderOrder: RenderOrder.WORLD_LAPTOP,
     });
     scene.add(laptop.group);
 
@@ -43,6 +45,7 @@ export function loadModels({ scene, world }) {
         path: './glb/laptop_scrn.glb',
         isHollow: false,
         collisionGroups: Collision.collisionSM,
+        renderOrder: RenderOrder.WORLD_LAPTOP_SCREEN,
     });
     scene.add(laptop_scrn.group);
 
@@ -60,6 +63,7 @@ export function loadModels({ scene, world }) {
         isHollow: false,
         collisionGroups: Collision.collisionSM,
         castShadow: true,
+        renderOrder: RenderOrder.WORLD_CAR,
         preserveMaterialMaps: true,
         // 투명 재질 제거 (에셋 호환 문제)
         preserveMaterialState: false,
@@ -84,6 +88,7 @@ export function loadModels({ scene, world }) {
         isHollow: false,
         collisionGroups: Collision.collisionSM,
         castShadow: true,
+        renderOrder: RenderOrder.WORLD_CAR,
         preserveMaterialMaps: true,
         // 투명 재질 제거 (에셋 호환 문제)
         preserveMaterialState: false,

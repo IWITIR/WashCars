@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { WORLD_LAPTOP_SCREEN } from '../RenderOrder.js';
 
 // 인게임 노트북 화면에 텍스쳐로 보이는 UI입니다.
 // 특별하게 업그레이드 인터랙션 및 업그레이드 시스템도 관리합니다. LaptopUpgradeUI는 노트북 화면 모델 위치를 찾아서,
@@ -127,7 +128,7 @@ export class LaptopUpgradeUI {
         panel.rotation.set(-Math.PI * 0.0027, 0, 0);
 
 
-        panel.renderOrder = 0;
+        panel.renderOrder = WORLD_LAPTOP_SCREEN;
         panel.name = 'LaptopUpgradeUIPanel';
         return panel;
     }

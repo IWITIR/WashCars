@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { UI_BASE } from '../RenderOrder.js';
 
 // 화면 우측 상단의 돈 UI를 담당하는 클래스입니다. MoneyUI는 플레이어가 현재까지 번 돈과 목표 금액을 표시합니다. 돈이 갱신될 때마다 setMoney나 addMoney 메서드를 호출하여 UI를 업데이트할 수 있습니다.
 export class MoneyUI {
@@ -20,7 +21,7 @@ export class MoneyUI {
         this.sprite = new THREE.Sprite(this.material);
 
         this.updateLayout();
-        this.sprite.renderOrder = 20;
+        this.sprite.renderOrder = UI_BASE;
         this.camera.add(this.sprite);
         
         this.updateUI();

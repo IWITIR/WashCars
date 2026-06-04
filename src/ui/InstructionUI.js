@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { TextSpriteUI } from './TextSpriteUI.js';
+import { UI_BASE } from '../RenderOrder.js';
 
 // 조작법 UI입니다.
 // 기본적으로 TextSpriteUI이지만, 화면 resize에 대응하여 위치를 항상 화면 좌하단에 있게 조정합니다.
@@ -24,7 +25,7 @@ export class InstructionUI {
             background: 'rgba(14, 18, 24, 0.62)',
             stroke: 'rgba(255, 255, 255, 0.28)',
             lineWidth: 2,
-            renderOrder: 20,
+            renderOrder: UI_BASE,
         });
         this.sprite = this.textUI.sprite;
 
