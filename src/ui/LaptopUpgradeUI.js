@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 
+// 인게임 노트북 화면에 텍스쳐로 보이는 UI입니다.
+// 특별하게 업그레이드 인터랙션 및 업그레이드 시스템도 관리합니다. LaptopUpgradeUI는 노트북 화면 모델 위치를 찾아서,
+// 그 위치에 메시를 하나 더 덮고 그 메시의 텍스쳐로 UI를 그리는 방식으로 구현되어 있습니다. 따라서 노트북 모델이 로드되고 준비된 이후에 tryInitialize() 함수를 호출해주어야 합니다.
 export class LaptopUpgradeUI {
     constructor({
         laptopScreen,
@@ -43,10 +46,17 @@ export class LaptopUpgradeUI {
         this.updateUI();
     }
 
+    // 노트북 화면 모델이 로드되고 준비되었는지 확인하여, 준비되었으면 UI 패널을 생성하여 노트북 화면에 붙입니다.
     tryInitialize() {
         if (this.isReady || !this.laptopScreen?.isLoaded || !this.laptopScreen.model) return;
 
-        this.screenMesh = this.findScreenMesh();
+        // 노트북 모델 속 메시를 찾습니다.
+        this.screenMesh = null;
+        this.laptopScreen.model.traverse((child) => {
+            if (!this.screenMesh && child.isMesh) {
+                this.screenMesh = child;
+            }
+        });
         if (!this.screenMesh) {
             return;
         }
@@ -56,6 +66,7 @@ export class LaptopUpgradeUI {
         this.isReady = true;
     }
 
+    // 실제 마우스 클릭이 UI의 어느 부분에서 일어났는지 감지하여, 업그레이드 로직으로 연결해줍니다.
     handleClick(raycaster) {
         if (!this.panel) return false;
 
@@ -93,23 +104,13 @@ export class LaptopUpgradeUI {
         return raycaster.intersectObject(this.panel, false).length > 0;
     }
 
+    // 업그레이드를 구매합니다.
     buyUpgrade(upgradeKey) {
         this.onBuyUpgrade(upgradeKey);
         this.updateUI();
     }
 
-    findScreenMesh() {
-        let screenMesh = null;
-
-        this.laptopScreen.model.traverse((child) => {
-            if (!screenMesh && child.isMesh) {
-                screenMesh = child;
-            }
-        });
-
-        return screenMesh;
-    }
-
+    // 노트북 화면에 덮을 패널 메시를 생성하는 함수입니다. 패널은 노트북 화면 메시의 위치와 크기에 맞춰서 만들어집니다.
     createPanel(screenMesh) {
         screenMesh.geometry.computeBoundingBox();
 
@@ -131,6 +132,7 @@ export class LaptopUpgradeUI {
         return panel;
     }
 
+    // uv좌표 계산 헬퍼 함수입니다. 버튼 영역이 사각형으로 정의되어 있기 때문에, 클릭된 위치가 해당 사각형 영역 안에 있는지를 계산합니다.
     isInsideRect(x, y, rect) {
         return (
             x >= rect.x &&
@@ -140,6 +142,7 @@ export class LaptopUpgradeUI {
         );
     }
 
+    // 업그레이드 화면의 헤더를 텍스쳐에 그립니다.
     drawHeader(ctx) {
         ctx.fillStyle = '#4ec3ff';
         ctx.font = '700 56px Arial';
@@ -162,6 +165,7 @@ export class LaptopUpgradeUI {
         }
     }
 
+    // 페이지 버튼 하나를 텍스쳐에 그립니다. 버튼에는 텍스트가 포함됩니다.
     drawPageButton(ctx, rect, text) {
         ctx.fillStyle = '#102638';
         ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
@@ -179,6 +183,7 @@ export class LaptopUpgradeUI {
         ctx.textBaseline = 'alphabetic';
     }
 
+    // 업그레이드 카드 하나를 텍스쳐에 그립니다. 카드에는 업그레이드 이름, 현재 레벨, 설명, 구매 버튼이 포함됩니다.
     drawUpgradeCard(ctx, { x, y, title, upgradeKey, descriptionLines, buttonRect }) {
         const state = this.getUpgradeState(upgradeKey);
 
@@ -227,6 +232,7 @@ export class LaptopUpgradeUI {
         ctx.textBaseline = 'alphabetic';
     }
 
+    // 업그레이드 1페이지를 그립니다.
     drawPageOne(ctx) {
         this.drawUpgradeCard(ctx, {
             x: 70,
@@ -254,6 +260,7 @@ export class LaptopUpgradeUI {
         });
     }
 
+    // 업그레이드 2페이지를 그립니다.
     drawPageTwo(ctx) {
         this.drawUpgradeCard(ctx, {
             x: 194,
@@ -273,6 +280,7 @@ export class LaptopUpgradeUI {
         });
     }
 
+    // 업그레이드 화면의 내용을 텍스쳐에 그립니다. 돈이 매프레임 변할수 있음에 따라 매프레임 업데이트됩니다.
     updateUI() {
         const ctx = this.context;
         if (!ctx) return;

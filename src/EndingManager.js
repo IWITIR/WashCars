@@ -46,7 +46,7 @@ export class EndingManager {
             parent: this.camera,
             width: 820,
             height: 180,
-            lines: ['우승!', '플레이해주셔서 감사합니다'],
+            lines: ['등록금을 벌었다~!', '플레이해주셔서 감사합니다'],
             fontSize: 48,
             background: 'rgba(7, 16, 24, 0.68)',
             stroke: 'rgba(255, 255, 255, 0.55)',

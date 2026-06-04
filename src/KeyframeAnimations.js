@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 
+// 차고 문, 차 이동, 연료 보충 애니메이션(AnimationsClip)을 생성하는 함수들과 애니메이션을 재생하는 함수입니다.
 export const GARAGE_DOOR_MOVE_DURATION = 1.1;
 export const CAR_MOVE_DURATION = 2.2;
 export const RELOAD_DURATION = 0.85;

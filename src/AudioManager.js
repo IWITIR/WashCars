@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 
+// 사운드 애셋을 로드하고 플레이하는 기능을 제공합니다.
 export class AudioManager {
     constructor({ camera, defaultVolume = 0.5, masterVolume = 1 } = {}) {
         if (!camera) {
@@ -18,6 +19,7 @@ export class AudioManager {
         this.camera.add(this.listener);
     }
 
+    // 주어진 경로에서 사운드 에셋을 로드합니다.
     async load(name, path, {
         loop = false,
         volume = this.defaultVolume,
@@ -46,6 +48,7 @@ export class AudioManager {
         return this.sounds.get(name) ?? null;
     }
 
+    // 주어진 이름의 사운드를 재생합니다.
     play(name) {
         const sound = this.get(name);
         if (!sound || sound.isPlaying) return;
@@ -63,6 +66,7 @@ export class AudioManager {
         sound.play();
     }
 
+    // play()는 이미 재생중인경우 무시하지만, 빠르게 반복되는 효과음은 playOneShot()으로 재생해야 합니다.
     playOneShot(name) {
         const source = this.get(name);
         if (!source?.buffer) return;

@@ -1,5 +1,6 @@
 import { AudioManager } from './AudioManager.js';
 
+// 소리 에셋 로드 부분을 보기 편하게 분리했습니다.
 export async function loadSounds(camera) {
     const audioManager = new AudioManager({ camera });
     await audioManager.load(

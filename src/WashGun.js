@@ -9,6 +9,7 @@ import {
     playClipOnce,
 } from './KeyframeAnimations.js';
 
+// 게임 내 워시건 모델(워터볼 쉐이더 포함), 물줄기 이펙트, 재장전 / bobbing 애니메이션 등을 모두 담당하는 클래스입니다.
 export class WashGun {
     constructor({ player, camera = player?.camera, scene = player?.scene }) {
         if (!camera) {

@@ -5,6 +5,7 @@ import { collisionALL } from './CollisionGroup.js';
 
 const gltfLoader = new GLTFLoader();
 
+// 주어진 GLB 모델을 로드하여 씬에 추가하고, Rapier 콜라이더도 함께 생성하는 클래스입니다.
 export class Model {
     constructor({
         world,
@@ -248,6 +249,7 @@ export class Model {
         }
     }
 
+    // 모델의 크기를 조절하는 함수입니다. physics까지 같이 설정해줍니다.
     rescale(factor, { rebuildPhysics = true } = {}) {
         this.scale = factor;
 

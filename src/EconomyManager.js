@@ -1,3 +1,4 @@
+// 게임 내 업그레이드에 쓰일 돈 시스템입니다.
 export class EconomyManager {
     constructor({ moneyUI, startingMoney = 0 }) {
         this.moneyUI = moneyUI;

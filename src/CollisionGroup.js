@@ -1,6 +1,5 @@
-// Rapier's collision groups are defined as bitmasks.
-// channel belongs to: first 16 bit
-// channel collides with: second 16 bit
+// RAPIER의 충돌 마스크 설정입니다.
+// 첫 16비트가 현재 그룹, 뒤 16비트가 충돌할 그룹입니다.
 
 const GROUP_PLAYER = 0x0001;
 const GROUP_STATICMESH = 0x0002;

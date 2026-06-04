@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 let showHelpers = false;
 
+// 씬의 조명을 세팅하는 함수입니다. 카메라가 주어지면 카메라에 플래시라이트도 추가합니다.
 export function setupLighting(scene, camera = null) {
     // 조명 세팅
 

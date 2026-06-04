@@ -7,6 +7,7 @@ import {
 
 const REWARD_DELAY = 0.6;
 
+// 현재 게임 내에서 세차되는 차와 세차 완료시 전환을 담당하는 클래스입니다.
 export class CarChange {
     constructor({
         cars,

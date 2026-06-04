@@ -236,6 +236,7 @@ window.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
     if (cameraManager.mode === 'start') return;
 
+    // 우선적으로 튜토리얼이 마우스 입력을 처리하도록 합니다. 튜토리얼이 입력을 처리할 필요가 없는 상태라면 카메라 매니저가 입력을 처리하도록 넘겨줍니다.
     if (tutorialManager.handlePrimaryMouseDown()) {
         isWashing = false;
         return;
@@ -257,11 +258,12 @@ window.addEventListener('mouseup', (e) => { if (e.button === 0) isWashing = fals
 
 
 
-// 4. 게임 메인 루프
+// 게임 메인 루프
 function gameUpdate() {
     requestAnimationFrame(gameUpdate);
 
     const delta = clock.getDelta();
+    // 각 기능들 (튜토리얼, 플레이어, 카메라, 물총, 돈이펙트, 엔딩) 업데이트
     tutorialManager.update(delta);
     player.update(delta, cameraManager.viewQuaternion);
     cameraManager.update(delta);
@@ -279,19 +281,25 @@ function gameUpdate() {
 
     // 물을 쏘고 있을 때의 충돌(때 지우기) 연산
     if (!endingManager.isStarted && cameraManager.mode === 'world' && !carChange.isChanging && isWashing && washGun.waterAmount > 0) {
+        // 물 소모
         washGun.consumeWater(delta * 0.5);
+        // 물소리 재생
         audioManager.play('water_hose', { position: player.rigidBody.translation() });
 
+        // 현재 세차중인 차의 진흙 메시들과 레이캐스트 충돌 계산
         const activeCar = carChange.getActiveCar();
         const washMeshes = activeCar ? activeCar.getWashMeshes() : [];
         const intersects = raycaster.intersectObjects(washMeshes, false);
 
+        // 레이캐스트 충돌이 있으면 세차
         if (intersects.length > 0) {
             const hit = intersects[0];
+            // washableModel에서 메시에 넣어놓은 참조를 이용해 세척 대상 모델을 알아냅니다.
             const washableModel = hit.object.washableModel;
 
             if (washableModel) {
                 sprayTarget.copy(hit.point);
+                // 세척량 계산 및 보상 지급
                 const cleanedAmount = washableModel.wash(
                     hit,
                     economyManager.getWashRadius(),
@@ -301,31 +309,41 @@ function gameUpdate() {
                 const reward = economyManager.calculateWashReward(cleanedAmount);
                 economyManager.addMoney(reward);
                 moneyEffect.trySpawn(hit.point, reward);
+                // 세차 소리 (물줄기가 부딪히는 소리) 재생
                 audioManager.play('water_hit', { position: hit.point });
             }
         } else {
+            // 세차중이 아니므로 물줄기가 부딪히는 소리 정지
             audioManager.stop('water_hit');
         }
     } else {
+        // 물 소모중이 아니므로 물줄기+세차소리 정지
         audioManager.stop('water_hose');
         audioManager.stop('water_hit');
     }
 
+    // 물줄기 업데이트
     washGun.updateWaterStream(
         !endingManager.isStarted && cameraManager.mode === 'world' && !carChange.isChanging && isWashing && washGun.waterAmount > 0,
         sprayTarget,
         economyManager.getWashRadius()
     );
 
+    // 차들 업데이트
     for (const model of washableModels) {
         model.update(delta, cameraManager.camera);
     }
+
+    // 노트북 UI 업데이트
     if (!laptopUpgradeUI.isReady) {
         laptopUpgradeUI.tryInitialize();
     }
     laptopUpgradeUI.updateUI();
 
+    // 스탯 업데이트
     stats.update();
+
+    // 커스텀 포스트 프로세싱
     // 게임 카메라가 postProcessTarget에 먼저 렌더하고 postCamera가 전체 화면 쿼드로 postProcessTarget에 쉐이더를 적용하여 렌더하는 방식입니다.
     postMaterial.uniforms.uTime.value += delta;
     renderer.setRenderTarget(postProcessTarget);

@@ -3,6 +3,7 @@ import { Model } from './Model.js';
 import { WashableModel } from './WashableModel.js';
 import * as Collision from './CollisionGroup.js';
 
+// 모델 에셋 로드 부분을 보기 편하게 분리했습니다.
 export function loadModels({ scene, world }) {
     const garage = new Model({
         world,

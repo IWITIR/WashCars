@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 
+// 화면 우측 상단의 돈 UI를 담당하는 클래스입니다. MoneyUI는 플레이어가 현재까지 번 돈과 목표 금액을 표시합니다. 돈이 갱신될 때마다 setMoney나 addMoney 메서드를 호출하여 UI를 업데이트할 수 있습니다.
 export class MoneyUI {
     constructor({ camera, money = 0, targetMoney = 5000000 }) {
         this.camera = camera;
@@ -34,6 +35,7 @@ export class MoneyUI {
         this.setMoney(this.money + amount);
     }
 
+    // 돈 UI를 매프레임마다 업데이트합니다. 현재 돈과 목표 금액을 표시합니다.
     updateUI() {
         const ctx = this.context;
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);

@@ -45,6 +45,8 @@ export class Player {
         // --- 3. 키보드 입력 상태 ---
         this.moveState = { forward: false, backward: false, left: false, right: false };
         this.isJumping = false;
+
+        // --- 4. 발소리 관련 변수들 ---
         this.footstepTimer = 0;
         this.footstepIndex = 0;
         this.walkStepInterval = 0.45;
@@ -195,6 +197,7 @@ export class Player {
         const eyeHeight = this.crouching ? this.eyeHeightOffset * 0.5 : this.eyeHeightOffset;
         this.eyePosition.set(nextPos.x, nextPos.y + eyeHeight, nextPos.z);
 
+        // 발소리 update
         this.updateFootsteps(delta);
     }
 
@@ -202,6 +205,7 @@ export class Player {
         return this.eyePosition;
     }
 
+    // 타이머상으로 일정한 간격마다 발소리를 재생합니다.
     updateFootsteps(delta) {
         const isMoving =
             this.moveState.forward ||

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
-// cavnas에 텍스트를 그리고, 그 텍스처를 Three.js 스프라이트에 적용하여 텍스트 UI를 띄웁니다.
+// canvas에 텍스트를 그리고, 그 텍스처를 Three.js 스프라이트에 적용하여 텍스트 UI를 띄웁니다.
+// 화면 좌측 하단의 instuction UI나, 튜토리얼 단계별 설명 UI 등에 사용됩니다.
 export class TextSpriteUI {
     constructor({
         parent,

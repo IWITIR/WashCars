@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { Model } from './Model.js';
 
-// 세척 가능한 모델 : 메시마다 dirt overlay를 생성합니다.
+// 세척 가능한 모델로, Model을 확장합니다. : 메시마다 dirt mesh를 생성합니다.
+// 세척의 근본 원리는 canvas에 2d로 그려지는 texture를 메시의 alphaMap으로 사용하는 것입니다.
+// 세척 지점은 main.js에서 raycast로 uv좌표로 구해집니다.
 export class WashableModel extends Model {
     constructor({
         dirtColor = 0x332211,
@@ -37,7 +39,7 @@ export class WashableModel extends Model {
         this.washRadiusScale = washRadiusScale;
     }
 
-    // 콜백 함수 오버라이드
+    // Model의 모델 로드 완료 콜백 함수 오버라이드
     onModelLoaded() {
         if (!this.model) return;
 
@@ -179,6 +181,7 @@ export class WashableModel extends Model {
         return dirtyAmount;
     }
 
+    // 세차 완료 진척도 추가
     addCleanScore(cleanAmount) {
         if (cleanAmount <= 0) return;
 
@@ -210,7 +213,7 @@ export class WashableModel extends Model {
         box.getSize(size);
 
         const barHeight = this.progressBarWidth * 0.06;
-
+        // 진척도 바는 background와 fill로 이루어져 있습니다.
         const backgroundMaterial = new THREE.MeshBasicMaterial({
             color: 0x121820,
             transparent: true,
@@ -224,10 +227,12 @@ export class WashableModel extends Model {
             depthWrite: false,
         });
 
+        // background와 fill을 묶을 그룹입니다.
         this.progressBillboard = new THREE.Group();
         this.progressBillboard.name = 'WashProgressBillboard';
         this.progressBillboard.renderOrder = 100;
 
+        // background과 fill 메시를 생성합니다. fill은 초기에는 0으로 안보이게 설정합니다.
         const background = new THREE.Mesh(
             new THREE.PlaneGeometry(this.progressBarWidth, barHeight),
             backgroundMaterial
@@ -238,16 +243,18 @@ export class WashableModel extends Model {
             new THREE.PlaneGeometry(this.progressBarWidth, barHeight),
             fillMaterial
         );
-        this.progressFill.renderOrder = 101;
-        this.progressFill.position.z = 0.01;
+        this.progressFill.renderOrder = 101; // fill의 renderOrder가 background보다 높아야 합니다.
+        this.progressFill.position.z = 0.01; // 약간 위로 띄움
         this.progressFill.visible = false;
 
+        // background와 fill을 묶을 그룹에 추가
         this.progressBillboard.add(background);
         this.progressBillboard.add(this.progressFill);
         this.group.add(this.progressBillboard);
         this.progressBillboard.position.set(0, size.y * 1.2, 0);
     }
 
+    // 세척 진척도를 업데이트합니다.
     update(delta, camera) {
         if (!this.progressBillboard || !this.progressFill) return;
         if (this.hideProgressBar) {
@@ -268,6 +275,7 @@ export class WashableModel extends Model {
         }
     }
 
+    // 세척 진척도 fill 업데이트. fill의 scale.x를 조정합니다.
     updateProgressFill() {
         const progress = this.getWashProgress();
         this.progressFill.visible = progress > 0;

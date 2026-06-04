@@ -123,7 +123,7 @@ export class CameraManager {
         });
     }
 
-    // 마우스 클릭으로 인한 카메라 모드 변경 처리
+    // CameraManager가 마우스 입력을 처리하는 함수입니다. 마우스 입력이 필요없는 상태인 경우 false를 반환합니다.
     handlePrimaryMouseDown(raycaster, centerPos, mousePos) {
         if (this.mode === 'pause') return false;
 
