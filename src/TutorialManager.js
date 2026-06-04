@@ -28,7 +28,6 @@ export class TutorialManager {
         this.startMoney = 0;
         this.upgradePurchased = false;
         this.goalWaitTime = 0;
-        this.focus = null;
 
         this.focusCenter = new THREE.Vector3();
         this.focusSize = new THREE.Vector3();
@@ -66,12 +65,6 @@ export class TutorialManager {
 
         const activeCar = this.getActiveCar?.();
         this.startFocusOnObject(activeCar?.group ?? null, true);
-
-        if (!this.focus) {
-            this.cameraManager.mode = 'world';
-            this.player.setInputEnabled(true);
-            this.cameraManager.lockPointer();
-        }
     }
 
     skip() {
@@ -81,18 +74,13 @@ export class TutorialManager {
     finish() {
         this.enabled = false;
         this.state = 'done';
-        this.focus = null;
         this.stepUI.visible = false;
         this.washGun.group.visible = true;
-        this.cameraManager.mode = 'world';
-        this.player.setInputEnabled(true);
-        this.cameraManager.lockPointer();
+        this.cameraManager.returnToWorldMode();
     }
 
     update(delta) {
         if (!this.enabled) return;
-
-        if (this.focus) return;
 
         if (this.state === 'wash') {
             this.updateWashStep();
@@ -142,12 +130,6 @@ export class TutorialManager {
         this.state = 'upgrade';
         const laptopTarget = this.getLaptopTarget?.();
         this.startFocusOnObject(laptopTarget);
-
-        if (!this.focus) {
-            this.cameraManager.mode = 'world';
-            this.player.setInputEnabled(true);
-            this.cameraManager.lockPointer();
-        }
     }
 
     updateUpgradeStep() {
@@ -181,8 +163,6 @@ export class TutorialManager {
     handlePrimaryMouseDown() {
         if (!this.enabled) return false;
 
-        if (this.focus) return true;
-
         if (this.state === 'goal' && this.goalWaitTime >= 2.0) {
             this.finish();
             return true;
@@ -205,14 +185,11 @@ export class TutorialManager {
             this.focusSize,
             () => {
                 /* 콜백 */
-                this.focus = null;
                 this.washGun.group.visible = true;
             },
             rotateOnly
         );
         if (!started) return;
-
-        this.focus = { active: true };
         this.washGun.group.visible = false;
     }
 }

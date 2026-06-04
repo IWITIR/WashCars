@@ -79,7 +79,7 @@ export class CameraManager {
                 this.player.setInputEnabled(true);
             }
 
-            if (!this.isPointerLocked && this.mode === 'world') {
+            if (!this.isPointerLocked && this.mode === 'world' && this.player.inputEnabled) {
                 this.enterPause();
             }
         });
@@ -237,6 +237,13 @@ export class CameraManager {
         this.domElement.requestPointerLock();
     }
 
+    // 월드 조작 복귀를 위한 공통 진입점입니다.
+    returnToWorldMode() {
+        this.mode = 'world';
+        this.player.setInputEnabled(false);
+        this.lockPointer();
+    }
+
     // 카메라 위치/회전 전환 트랜지션 시작
     startTransition(toPosition, toQuaternion, nextMode) {
         this.upgradeTransitionFromPosition.copy(this.camera.position);
@@ -375,10 +382,7 @@ export class CameraManager {
             // back 완료
             const onFinished = this.tutorialFocusCallback;
             this.tutorialFocusCallback = null;
-            this.mode = 'world';
-            // 다시 마우스입력을 가능케 합니다.
-            this.player.setInputEnabled(true);
-            this.lockPointer();
+            this.returnToWorldMode();
             onFinished?.(); // 콜백
         }
     }
