@@ -9,6 +9,7 @@ export function loadModels({ scene, world }) {
         path: './glb/Garage.glb',
         isHollow: true,
         collisionGroups: Collision.collisionSM,
+        receiveShadow: true,
     });
     scene.add(garage.group);
 
