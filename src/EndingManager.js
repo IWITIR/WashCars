@@ -29,7 +29,14 @@ export class EndingManager {
         this.target = new THREE.Vector3(0, 16, 0);
         this.biker = null;
         this.mixer = null;
+        // 엔딩 전환시의 포스트프로세스 화면전환 변수들입니다.
+        this.transitionActive = false;
+        this.transitionPhase = 'cover';
+        this.transitionProgress = 0;
+        this.coverDuration = 0.45;
+        this.revealDuration = 0.55;
 
+        // 목표 달성시 엔딩 가능을 알리는 UI입니다.
         this.promptUI = new TextSpriteUI({
             parent: this.camera,
             width: 640,
@@ -42,6 +49,7 @@ export class EndingManager {
         });
         this.promptSprite = this.promptUI.sprite;
 
+        // 엔딩 메시지 UI
         this.thanksUI = new TextSpriteUI({
             parent: this.camera,
             width: 820,
@@ -64,22 +72,40 @@ export class EndingManager {
         this.bindEvents();
     }
 
+    // E키 연결
     bindEvents() {
         document.addEventListener('keydown', (e) => {
             if (e.code === 'KeyE' && this.canStart()) {
-                this.start();
+                this.requestStart();
             }
         });
     }
 
+    // 엔딩 가능여부를 판정합니다.
     canStart() {
         return !this.isStarted &&
+            !this.transitionActive &&
             this.cameraManager.mode === 'world' &&
             this.economyManager.money >= this.targetMoney &&
             this.biker != null;
     }
 
+    // 트랜지션 효과를 시작합니다. 트랜지션이 끝나면 실제 엔딩이 시작됩니다.
+    requestStart() {
+        if (!this.canStart()) return;
+
+        this.transitionActive = true;
+        this.transitionPhase = 'cover';
+        this.transitionProgress = 0;
+        this.promptSprite.visible = false;
+        this.cameraManager.onStopWashing?.();
+        this.player.setInputEnabled(false);
+        document.exitPointerLock();
+    }
+
     start() {
+        if (this.isStarted) return;
+
         this.isStarted = true;
         this.orbitTime = 0;
         this.promptSprite.visible = false;
@@ -99,6 +125,7 @@ export class EndingManager {
         this.audioManager.play('clap');
     }
 
+    // FBX 바이커 모델을 다운로드합니다. 애니메이션 하나가 이미 포함되어 있습니다.
     async loadBiker() {
         const loader = new FBXLoader();
 
@@ -119,8 +146,37 @@ export class EndingManager {
         }
     }
 
+    // 엔딩 알림 UI 및 트랜지션 포스트프로세스 유니폼 변수를 업데이트합니다.
     update(delta) {
         this.promptSprite.visible = this.canStart();
+
+        if (this.transitionActive) {
+            // delta가 너무 커지는 경우(프레임 드랍 등) 트랜지션이 너무 빠르게 진행되는 것을 방지하기 위해 최대값 (30FPS 기준)을 설정합니다.
+            const safeDelta = Math.min(delta, 1 / 30);
+
+            // cover와 reveal 두 단계로 나누어지고, cover 단계에서는 유니폼 값을 0에서 1로 올리고, reveal 단계에서는 1에서 0으로 내립니다. cover가 끝나면 엔딩이 시작되고, reveal이 끝나면 트랜지션이 완전히 종료됩니다.
+            if (this.transitionPhase === 'cover') {
+                this.transitionProgress = Math.min(
+                    this.transitionProgress + safeDelta / this.coverDuration,
+                    1
+                );
+
+                if (this.transitionProgress >= 1) {
+                    this.start();
+                    this.transitionPhase = 'reveal';
+                }
+            } else {
+                this.transitionProgress = Math.max(
+                    this.transitionProgress - safeDelta / this.revealDuration,
+                    0
+                );
+
+                if (this.transitionProgress <= 0) {
+                    this.transitionActive = false;
+                }
+            }
+        }
+
         if (!this.isStarted) return;
 
         this.orbitTime += delta;
@@ -128,6 +184,7 @@ export class EndingManager {
         this.mixer?.update(delta);
     }
 
+    // 한번만 실행되는 레이아웃 업데이트 함수입니다. 엔딩 메시지와 목표 달성 프롬프트의 위치와 크기를 설정합니다.
     updateLayout() {
         this.promptSprite.position.set(0, -0.55, -2);
         this.promptSprite.scale.set(1.9, 0.28, 1);
@@ -136,6 +193,7 @@ export class EndingManager {
         this.thanksSprite.scale.set(2.25, 0.5, 1);
     }
 
+    // 엔딩 씬에서 화면이 빙빙 도는 카메라 연출을 업데이트합니다. 
     updateEndingCamera() {
         const radius = 48;
         const angle = this.orbitTime * 0.55;
@@ -145,5 +203,10 @@ export class EndingManager {
             Math.sin(angle) * radius
         );
         this.camera.lookAt(this.target);
+    }
+
+    // 트랜지션 유니폼 업데이트를 위한 getter 함수입니다. 현재 트랜지션이 진행중이라면 0에서 1 사이의 값을 반환하고, 그렇지 않다면 0을 반환합니다.
+    getTransitionProgress() {
+        return this.transitionProgress;
     }
 }

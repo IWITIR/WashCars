@@ -47,6 +47,7 @@ const postMaterial = createMaterialFromShader({
     uniforms: {
         tDiffuse: { value: postProcessTarget.texture },
         uTime: { value: 0 },
+        uTransitionProgress: { value: 0 },
     },
     materialOptions: {
         depthTest: false,
@@ -346,6 +347,7 @@ function gameUpdate() {
     // 커스텀 포스트 프로세싱
     // 게임 카메라가 postProcessTarget에 먼저 렌더하고 postCamera가 전체 화면 쿼드로 postProcessTarget에 쉐이더를 적용하여 렌더하는 방식입니다.
     postMaterial.uniforms.uTime.value += delta;
+    postMaterial.uniforms.uTransitionProgress.value = endingManager.getTransitionProgress();
     renderer.setRenderTarget(postProcessTarget);
     renderer.render(scene, camera);
     renderer.setRenderTarget(null);

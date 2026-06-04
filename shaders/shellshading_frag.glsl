@@ -1,5 +1,6 @@
 uniform sampler2D tDiffuse;
 uniform float uTime;
+uniform float uTransitionProgress;
 varying vec2 vUv;
 
 void main() {
@@ -21,6 +22,15 @@ void main() {
     // 너무 평평하지 않게 아주 미세한 노이즈를 더합니다.
     float noise = fract(sin(dot(vUv + uTime * 0.03, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
     color += noise * 0.02;
+
+    // 화면을 블럭으로 나눠 순서대로 검게 덮습니다.
+    vec2 grid = vec2(32.0, 18.0);
+    vec2 block = floor(vUv * grid);
+    float index = block.y * grid.x + block.x;
+    float total = grid.x * grid.y;
+    float threshold = uTransitionProgress * total;
+    float blockMask = step(index, threshold - 1.0);
+    color *= 1.0 - blockMask;
 
     color = clamp(color, 0.0, 1.0);
 
