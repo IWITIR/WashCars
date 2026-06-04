@@ -33,7 +33,7 @@ export class TextSpriteUI {
         this.sprite.visible = visible;
         parent.add(this.sprite);
 
-        this.draw({
+        this.updateUI({
             width,
             height,
             lines,
@@ -47,7 +47,7 @@ export class TextSpriteUI {
         });
     }
 
-    draw({ width, height, lines, fontSize, fontWeight, textAlign, background, stroke, lineWidth, paddingX }) {
+    updateUI({ width, height, lines, fontSize, fontWeight, textAlign, background, stroke, lineWidth, paddingX }) {
         const ctx = this.context;
         ctx.clearRect(0, 0, width, height);
 

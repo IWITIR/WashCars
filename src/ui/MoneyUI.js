@@ -22,19 +22,19 @@ export class MoneyUI {
         this.sprite.renderOrder = 20;
         this.camera.add(this.sprite);
         
-        this.draw();
+        this.updateUI();
     }
 
     setMoney(money) {
         this.money = money;
-        this.draw();
+        this.updateUI();
     }
 
     addMoney(amount) {
         this.setMoney(this.money + amount);
     }
 
-    draw() {
+    updateUI() {
         const ctx = this.context;
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 

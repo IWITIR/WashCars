@@ -279,7 +279,7 @@ function gameUpdate() {
     if (!laptopUpgradeUI.isReady) {
         laptopUpgradeUI.tryInitialize();
     }
-    laptopUpgradeUI.draw();
+    laptopUpgradeUI.updateUI();
 
     stats.update();
     // 게임 카메라가 postProcessTarget에 먼저 렌더하고 postCamera가 전체 화면 쿼드로 postProcessTarget에 쉐이더를 적용하여 렌더하는 방식입니다.

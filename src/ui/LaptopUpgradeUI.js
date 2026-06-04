@@ -40,7 +40,7 @@ export class LaptopUpgradeUI {
         this.nextPageButtonRect = { x: 886, y: 78, width: 58, height: 58 };
         this.prevPageButtonRect = { x: 886, y: 78, width: 58, height: 58 };
 
-        this.draw();
+        this.updateUI();
     }
 
     tryInitialize() {
@@ -68,10 +68,10 @@ export class LaptopUpgradeUI {
 
         if (this.currentPage === 1 && this.isInsideRect(x, y, this.nextPageButtonRect)) {
             this.currentPage = 2;
-            this.draw();
+            this.updateUI();
         } else if (this.currentPage === 2 && this.isInsideRect(x, y, this.prevPageButtonRect)) {
             this.currentPage = 1;
-            this.draw();
+            this.updateUI();
         } else if (this.currentPage === 1 && this.isInsideRect(x, y, this.cleanPowerButtonRect)) {
             this.buyUpgrade('cleanPower');
         } else if (this.currentPage === 1 && this.isInsideRect(x, y, this.waterTankButtonRect)) {
@@ -95,7 +95,7 @@ export class LaptopUpgradeUI {
 
     buyUpgrade(upgradeKey) {
         this.onBuyUpgrade(upgradeKey);
-        this.draw();
+        this.updateUI();
     }
 
     findScreenMesh() {
@@ -273,7 +273,7 @@ export class LaptopUpgradeUI {
         });
     }
 
-    draw() {
+    updateUI() {
         const ctx = this.context;
         if (!ctx) return;
 
