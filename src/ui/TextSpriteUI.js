@@ -33,17 +33,28 @@ export class TextSpriteUI {
         this.sprite.visible = visible;
         parent.add(this.sprite);
 
+        this.width = width;
+        this.height = height;
+        this.lines = lines;
+        this.fontSize = fontSize;
+        this.fontWeight = fontWeight;
+        this.textAlign = textAlign;
+        this.background = background;
+        this.stroke = stroke;
+        this.lineWidth = lineWidth;
+        this.paddingX = paddingX;
+
         this.updateUI({
-            width,
-            height,
-            lines,
-            fontSize,
-            fontWeight,
-            textAlign,
-            background,
-            stroke,
-            lineWidth,
-            paddingX,
+            width: this.width,
+            height: this.height,
+            lines: this.lines,
+            fontSize: this.fontSize,
+            fontWeight: this.fontWeight,
+            textAlign: this.textAlign,
+            background: this.background,
+            stroke: this.stroke,
+            lineWidth: this.lineWidth,
+            paddingX: this.paddingX,
         });
     }
 
@@ -76,6 +87,23 @@ export class TextSpriteUI {
     setTransform(position, scale) {
         this.sprite.position.copy(position);
         this.sprite.scale.copy(scale);
+    }
+
+    // 텍스트 내용 업데이트 메서드입니다.
+    setLines(lines) {
+        this.lines = lines;
+        this.updateUI({
+            width: this.width,
+            height: this.height,
+            lines: this.lines,
+            fontSize: this.fontSize,
+            fontWeight: this.fontWeight,
+            textAlign: this.textAlign,
+            background: this.background,
+            stroke: this.stroke,
+            lineWidth: this.lineWidth,
+            paddingX: this.paddingX,
+        });
     }
 
     set visible(isVisible) {

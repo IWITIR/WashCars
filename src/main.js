@@ -13,6 +13,7 @@ import { MoneyEffect } from './ui/MoneyEffect.js';
 import { EconomyManager } from './EconomyManager.js';
 import { CarChange } from './CarChange.js';
 import { EndingManager } from './EndingManager.js';
+import { TutorialManager } from './TutorialManager.js';
 import { loadShader } from './util/loadShader.js';
 import { createMaterialFromShader } from './util/createMaterialFromShader.js';
 import * as Collision from './CollisionGroup.js';
@@ -59,6 +60,9 @@ postScene.add(postQuad);
 const startOverlay = document.getElementById('start-overlay');
 const startMessage = document.getElementById('start-message');
 const startButton = document.getElementById('start-button');
+const tutorialChoice = document.getElementById('tutorial-choice');
+const tutorialYesButton = document.getElementById('tutorial-yes-button');
+const tutorialNoButton = document.getElementById('tutorial-no-button');
 
 // 조명 세팅
 setupLighting(scene, camera);
@@ -122,10 +126,15 @@ const menuVolumePanel = document.getElementById('menu-volume-panel');
 // UI 세팅
 const moneyUI = new MoneyUI({ camera });
 const economyManager = new EconomyManager({ moneyUI });
+let tutorialManager = null;
 const laptopUpgradeUI = new LaptopUpgradeUI({
     laptopScreen: laptop_scrn,
     getUpgradeState: (key) => economyManager.getUpgradeState(key),
-    onBuyUpgrade: (key) => economyManager.tryBuyUpgrade(key),
+    onBuyUpgrade: (key) => {
+        const result = economyManager.tryBuyUpgrade(key);
+        tutorialManager?.notifyUpgradePurchased(result);
+        return result;
+    },
 });
 const instructionUI = new InstructionUI({ camera });
 const moneyEffect = new MoneyEffect({ scene });
@@ -153,6 +162,17 @@ const cameraManager = new CameraManager({
     },
 });
 
+tutorialManager = new TutorialManager({
+    camera,
+    player,
+    cameraManager,
+    washGun,
+    economyManager,
+    getActiveCar: () => carChange.getActiveCar(),
+    getLaptopTarget: () => laptopUpgradeUI.panel ?? laptop_scrn.group,
+    targetMoney: 5000000,
+});
+
 // 시작 및 로딩 화면을 구성합니다.
 cameraManager.mode = 'start';
 player.setInputEnabled(false);
@@ -162,17 +182,35 @@ camera.quaternion.copy(cameraManager.viewQuaternion);
 function startGame() {
     if (cameraManager.mode !== 'start') return;
 
+    startMessage.textContent = '튜토리얼을 진행하시겠습니까?';
+    startButton.hidden = true;
+    tutorialChoice.hidden = false;
+}
+
+function launchGame(enableTutorial) {
+    if (cameraManager.mode !== 'start') return;
+
     startOverlay?.classList.add('hide');
     cameraManager.mode = 'world';
     player.setInputEnabled(true);
     cameraManager.lockPointer();
+
+    if (enableTutorial) {
+        tutorialManager.start();
+    } else {
+        tutorialManager.skip();
+    }
 }
 
 if (startMessage && startButton) {
     startMessage.textContent = 'Wash Cars';
     startButton.hidden = false;
-    startOverlay?.addEventListener('click', startGame);
+    tutorialChoice.hidden = true;
+    startButton.addEventListener('click', startGame);
 }
+
+tutorialYesButton?.addEventListener('click', () => launchGame(true));
+tutorialNoButton?.addEventListener('click', () => launchGame(false));
 
 // 엔딩 매니저 추가
 const endingManager = new EndingManager({
@@ -198,6 +236,11 @@ window.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
     if (cameraManager.mode === 'start') return;
 
+    if (tutorialManager.handlePrimaryMouseDown()) {
+        isWashing = false;
+        return;
+    }
+
     if (bgmStarted === false) {
         audioManager.play('bgm');
         bgmStarted = true;
@@ -219,6 +262,7 @@ function gameUpdate() {
     requestAnimationFrame(gameUpdate);
 
     const delta = clock.getDelta();
+    tutorialManager.update(delta);
     player.update(delta, cameraManager.viewQuaternion);
     cameraManager.update(delta);
     washGun.setMaxWaterAmount(economyManager.getMaxWaterAmount());
@@ -288,6 +332,7 @@ function gameUpdate() {
     renderer.render(scene, camera);
     renderer.setRenderTarget(null);
     renderer.render(postScene, postCamera);
+
     world.step(); // 물리 시뮬레이션 한 스텝 진행
     // console.log(renderer.info.render); 
 }
@@ -298,6 +343,7 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
     postProcessTarget.setSize(window.innerWidth, window.innerHeight);
+    tutorialManager.updateLayout();
     moneyUI.updateLayout();
     instructionUI.updateLayout();
     endingManager.updateLayout();

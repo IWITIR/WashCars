@@ -31,19 +31,36 @@ export class CameraManager {
         this.viewYaw = 0;
         this.viewPitch = 0;
         this.viewQuaternion = new THREE.Quaternion();
+
+        // laptop UI 모드로 전환할때 사용될 변수들입니다.
         this.laptopScreenCenter = new THREE.Vector3();
         this.laptopViewCached = false;
         this.laptopViewPosition = new THREE.Vector3();
         this.laptopViewQuaternion = new THREE.Quaternion();
         // 카메라 회전을 계산할 임시 카메라입니다. 실제로는 사용하지 않습니다.
         this.laptopViewCamera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
-        this.transitionTime = 0;
-        this.transitionDuration = 0.45;
-        this.transitionNextMode = 'world';
-        this.transitionFromPosition = new THREE.Vector3();
-        this.transitionToPosition = new THREE.Vector3();
-        this.transitionFromQuaternion = new THREE.Quaternion();
-        this.transitionToQuaternion = new THREE.Quaternion();
+        this.upgradeTransitionTime = 0;
+        this.upgradeTransitionDuration = 0.45;
+        this.upgradeTransitionNextMode = 'world';
+        this.upgradeTransitionFromPosition = new THREE.Vector3();
+        this.upgradeTransitionToPosition = new THREE.Vector3();
+        this.upgradeTransitionFromQuaternion = new THREE.Quaternion();
+        this.upgradeTransitionToQuaternion = new THREE.Quaternion();
+
+        // 튜토리얼 카메라 연출 관련 변수들
+        this.tutorialFocusTime = 0;
+        this.tutorialFocusPhase = 'go'; // go, hold, back
+        this.tutorialFocusCallback = null;
+        // 카메라 위치/회전 계산용 임시 카메라입니다. 실제로는 사용하지 않습니다.
+        // From -> to -> back 순으로 위치/회전이 보간됩니다.
+        this.tutorialFocusCamera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+        this.tutorialFocusDirection = new THREE.Vector3();
+        this.tutorialFocusToPosition = new THREE.Vector3();
+        this.tutorialFocusToQuaternion = new THREE.Quaternion();
+        this.tutorialFocusFromPosition = new THREE.Vector3();
+        this.tutorialFocusFromQuaternion = new THREE.Quaternion();
+        this.tutorialFocusBackPosition = new THREE.Vector3();
+        this.tutorialFocusBackQuaternion = new THREE.Quaternion();
 
         this.scene.add(this.camera);
         this.player.setInputEnabled(false);
@@ -134,7 +151,12 @@ export class CameraManager {
 
     update(delta) {
         if (this.mode === 'transition') {
-            this.updateTransition(delta);
+            this.updateUpgradeTransition(delta);
+            return;
+        }
+
+        if (this.mode === 'tutorial') {
+            this.updateTutorialFocus(delta);
             return;
         }
 
@@ -217,40 +239,147 @@ export class CameraManager {
 
     // 카메라 위치/회전 전환 트랜지션 시작
     startTransition(toPosition, toQuaternion, nextMode) {
-        this.transitionFromPosition.copy(this.camera.position);
-        this.transitionFromQuaternion.copy(this.camera.quaternion);
-        this.transitionToPosition.copy(toPosition);
-        this.transitionToQuaternion.copy(toQuaternion);
-        this.transitionNextMode = nextMode;
-        this.transitionTime = 0;
+        this.upgradeTransitionFromPosition.copy(this.camera.position);
+        this.upgradeTransitionFromQuaternion.copy(this.camera.quaternion);
+        this.upgradeTransitionToPosition.copy(toPosition);
+        this.upgradeTransitionToQuaternion.copy(toQuaternion);
+        this.upgradeTransitionNextMode = nextMode;
+        this.upgradeTransitionTime = 0;
         this.mode = 'transition';
     }
 
     // 트랜지션 모드인 경우 정해진 From/To 위치와 회전을 보간합니다.
-    updateTransition(delta) {
-        this.transitionTime += delta;
-        const progress = Math.min(this.transitionTime / this.transitionDuration, 1);
+    updateUpgradeTransition(delta) {
+        this.upgradeTransitionTime += delta;
+        const progress = Math.min(this.upgradeTransitionTime / this.upgradeTransitionDuration, 1);
         const eased = progress * progress * (3 - 2 * progress);
 
         this.camera.position.lerpVectors(
-            this.transitionFromPosition,
-            this.transitionToPosition,
+            this.upgradeTransitionFromPosition,
+            this.upgradeTransitionToPosition,
             eased
         );
         this.camera.quaternion.slerpQuaternions(
-            this.transitionFromQuaternion,
-            this.transitionToQuaternion,
+            this.upgradeTransitionFromQuaternion,
+            this.upgradeTransitionToQuaternion,
             eased
         );
 
         if (progress < 1) return;
 
-        this.mode = this.transitionNextMode;
+        this.mode = this.upgradeTransitionNextMode;
         if (this.mode === 'world') {
             this.player.setInputEnabled(true);
         } else if (this.mode === 'laptop') {
             // 마우스락 쿨다운 시작
             this.startMouseLockCooldown();
+        }
+    }
+
+    // 튜토리얼에서 특정 위치를 바라보는 연출 담당 update
+    startTutorialFocus(targetCenter, targetSize, onFinished = null, rotateOnly = false) {
+        if (!targetCenter || !targetSize) return false;
+
+        const playerEye = this.player.getEyePosition();
+        this.camera.position.copy(playerEye);
+        this.camera.quaternion.copy(this.viewQuaternion);
+        this.camera.updateMatrixWorld(true);
+
+        // from을 현재 카메라 위치/회전으로,
+        // back을 플레이어 시점 위치/회전으로 고정합니다.
+        this.tutorialFocusFromPosition.copy(this.camera.position);
+        this.tutorialFocusFromQuaternion.copy(this.camera.quaternion);
+        this.tutorialFocusBackPosition.copy(playerEye);
+        this.tutorialFocusBackQuaternion.copy(this.viewQuaternion);
+
+        // 바라보는 방향의 반대 벡터 (위치 - 타겟)입니다.
+        this.tutorialFocusDirection.copy(this.tutorialFocusFromPosition).sub(targetCenter);
+        if (this.tutorialFocusDirection.length() < 0.0001) {
+            // 너무 가까우면 방향 벡터 계산이 불안정하므로 기본값 사용
+            this.tutorialFocusDirection.set(0, 0.4, 1);
+        }
+        this.tutorialFocusDirection.normalize();
+
+        // rotateOnly 옵션에 따라
+        if (rotateOnly) {
+            // 위치 이동을 하지 않습니다.
+            this.tutorialFocusToPosition.copy(this.tutorialFocusFromPosition);
+        } else {
+            // 위치 이동을 합니다.
+            const baseDistance = this.tutorialFocusFromPosition.distanceTo(targetCenter);
+            const distance = THREE.MathUtils.clamp(
+                baseDistance + targetSize.length() * 0.25,
+                6,
+                12
+            );
+            // 타겟에서 크기 비례 후 clamp된 거리만큼의 위치로 이동합니다.
+            this.tutorialFocusToPosition.copy(targetCenter)
+                .addScaledVector(this.tutorialFocusDirection, distance)
+        }
+
+        // To 위치와 회전을 사용합니다. 회전은 임시 카메라를 사용하여 계산합니다 (왼손 좌표계)
+        this.tutorialFocusCamera.position.copy(this.tutorialFocusToPosition);
+        this.tutorialFocusCamera.lookAt(targetCenter);
+        this.tutorialFocusToQuaternion.copy(this.tutorialFocusCamera.quaternion);
+
+        // 튜토리얼 연출 시작 변수들
+        this.tutorialFocusCallback = onFinished;
+        this.tutorialFocusPhase = 'go';
+        this.tutorialFocusTime = 0;
+
+        this.onStopWashing?.(); // 연출 시작시 세차 중지 콜백
+        this.mode = 'tutorial'; // 모드 변경
+        // 입력을 해제하고 마우스 락을 잠깐 해제합니다.
+        this.player.setInputEnabled(false);
+        document.exitPointerLock();
+        return true;
+    }
+
+    updateTutorialFocus(delta) {
+        
+        if (this.mode != 'tutorial') return;
+
+        this.tutorialFocusTime += delta;
+
+        if (this.tutorialFocusPhase === 'go') {
+            // 0.7초간 포커스 대상에 접근합니다.
+            const t = Math.min(this.tutorialFocusTime / 0.7, 1);
+            const eased = t * t * (3 - 2 * t);
+            this.camera.position.lerpVectors(this.tutorialFocusFromPosition, this.tutorialFocusToPosition, eased);
+            this.camera.quaternion.slerpQuaternions(this.tutorialFocusFromQuaternion, this.tutorialFocusToQuaternion, eased);
+
+            if (t < 1) return;
+            // go 완료
+            this.tutorialFocusPhase = 'hold';
+            this.tutorialFocusTime = 0;
+            return;
+        }
+
+        if (this.tutorialFocusPhase === 'hold') {
+            // 0.35초간 포커스 위치를 유지합니다.
+            if (this.tutorialFocusTime < 0.35) return;
+            // hold 완료
+            this.tutorialFocusPhase = 'back';
+            this.tutorialFocusTime = 0;
+            return;
+        }
+    
+        if (this.tutorialFocusPhase === 'back') {
+            // 0.7초간 원래 위치로 돌아갑니다.
+            const t = Math.min(this.tutorialFocusTime / 0.7, 1);
+            const eased = t * t * (3 - 2 * t);
+            this.camera.position.lerpVectors(this.tutorialFocusToPosition, this.tutorialFocusBackPosition, eased);
+            this.camera.quaternion.slerpQuaternions(this.tutorialFocusToQuaternion, this.tutorialFocusBackQuaternion, eased);
+
+            if (t < 1) return;
+            // back 완료
+            const onFinished = this.tutorialFocusCallback;
+            this.tutorialFocusCallback = null;
+            this.mode = 'world';
+            // 다시 마우스입력을 가능케 합니다.
+            this.player.setInputEnabled(true);
+            this.lockPointer();
+            onFinished?.(); // 콜백
         }
     }
 

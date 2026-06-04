@@ -53,6 +53,17 @@ canvas {
     background: rgba(255, 255, 255, 0.2);
 }
 
+.tutorial-choice {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: center;
+}
+
+.tutorial-choice[hidden] {
+    display: none;
+}
+
 /* 시각적인 클릭 가이드를 위한 작은 십자선(커서) */
 #cursor {
     position: absolute;
