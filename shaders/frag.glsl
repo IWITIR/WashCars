@@ -10,4 +10,6 @@ void main() {
     // normal frag
     vec4 color = texture2D(tDiffuse, vUv);
     gl_FragColor = vec4(color.rgb, color.a);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
 }

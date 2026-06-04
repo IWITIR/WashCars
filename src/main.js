@@ -13,14 +13,16 @@ import { MoneyEffect } from './ui/MoneyEffect.js';
 import { EconomyManager } from './EconomyManager.js';
 import { CarChange } from './CarChange.js';
 import { EndingManager } from './EndingManager.js';
+import { loadShader } from './util/loadShader.js';
+import { createMaterialFromShader } from './util/createMaterialFromShader.js';
 import * as Collision from './CollisionGroup.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 
-// 0. stats 세팅 (성능 모니터링)
+// stats 세팅 (성능 모니터링)
 const stats = new Stats();
 document.body.appendChild(stats.dom);
 
-// 1. 기본 씬, 카메라, 렌더러 세팅
+// 기본 씬, 카메라, 렌더러 세팅
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 0, 2);
@@ -30,6 +32,28 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.shadowMap.enabled = true;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+
+// 포스트 프로세싱용 쉐이더와 렌더 타겟 세팅
+const postVertexShader = await loadShader('./shaders/vert.glsl');
+const postFragmentShader = await loadShader('./shaders/shellshading_frag.glsl');
+
+const postProcessTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+const postScene = new THREE.Scene();
+const postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const postMaterial = createMaterialFromShader({
+    vertexShader: postVertexShader,
+    fragmentShader: postFragmentShader,
+    uniforms: {
+        tDiffuse: { value: postProcessTarget.texture },
+        uTime: { value: 0 },
+    },
+    materialOptions: {
+        depthTest: false,
+        depthWrite: false,
+    },
+});
+const postQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMaterial);
+postScene.add(postQuad);
 
 const startOverlay = document.getElementById('start-overlay');
 const startMessage = document.getElementById('start-message');
@@ -82,17 +106,19 @@ const player = new Player({
 });
 const washGun = new WashGun({ player, camera, scene });
 
-// 2. 레이캐스터 (수압 총) 세팅
+// 레이캐스터 (수압 총) 세팅
 const raycaster = new THREE.Raycaster();
 const centerPos = new THREE.Vector2(0, 0); // 화면 정중앙
 const mousePos = new THREE.Vector2(0, 0);
 let isWashing = false;
 const sprayTarget = new THREE.Vector3();
 const maxSprayDistance = 50;
+
+// 메뉴 html 가져오기
 const menuPopup = document.getElementById('menu');
 const menuVolumePanel = document.getElementById('menu-volume-panel');
 
-// 3. UI 세팅
+// UI 세팅
 const moneyUI = new MoneyUI({ camera });
 const economyManager = new EconomyManager({ moneyUI });
 const laptopUpgradeUI = new LaptopUpgradeUI({
@@ -255,7 +281,12 @@ function gameUpdate() {
     laptopUpgradeUI.draw();
 
     stats.update();
+    // 게임 카메라가 postProcessTarget에 먼저 렌더하고 postCamera가 전체 화면 쿼드로 postProcessTarget에 쉐이더를 적용하여 렌더하는 방식입니다.
+    postMaterial.uniforms.uTime.value += delta;
+    renderer.setRenderTarget(postProcessTarget);
     renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    renderer.render(postScene, postCamera);
     world.step(); // 물리 시뮬레이션 한 스텝 진행
     // console.log(renderer.info.render); 
 }
@@ -265,6 +296,7 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    postProcessTarget.setSize(window.innerWidth, window.innerHeight);
     moneyUI.updateLayout();
     instructionUI.updateLayout();
     endingManager.updateLayout();
