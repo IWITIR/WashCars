@@ -10,9 +10,9 @@ export function setupLighting(scene, camera = null) {
     scene.add(ambientLight);
 
     // 1) 맵 중앙 상공에서 아래로 넓게 비추는 라이트
-    const mapCenterPoint = new THREE.PointLight(0xffffff, 10000, 0);
+    const mapCenterPoint = new THREE.PointLight(0xffffff, 20000, 0);
     mapCenterPoint.castShadow = true;
-    mapCenterPoint.position.set(0, 40, 0); // 맵 중앙
+    mapCenterPoint.position.set(0, 60, 0); // 맵 중앙
     // mapCenterPoint.target.position.set(0, -15, 20); // 수직 ㅇ아래
     scene.add(mapCenterPoint);
     // scene.add(mapCenterPoin.target);
@@ -34,21 +34,21 @@ export function setupLighting(scene, camera = null) {
     }
 
     // 라이팅 헬퍼 (디버그)
-    const lightingHelperRoot = new THREE.Group();
-    scene.add(lightingHelperRoot);
+    // const lightingHelperRoot = new THREE.Group();
+    // scene.add(lightingHelperRoot);
 
-    window.addEventListener('keydown', (e) => {
-        if (e.code === 'KeyH') {
-            console.log('Helper toggle key pressed');
-            showHelpers = !showHelpers;
-            lightingHelperRoot.traverse((child) => {
-                    child.visible = showHelpers;
-            });
-        }
-    });
+    // window.addEventListener('keydown', (e) => {
+    //     if (e.code === 'KeyH') {
+    //         console.log('Helper toggle key pressed');
+    //         showHelpers = !showHelpers;
+    //         lightingHelperRoot.traverse((child) => {
+    //                 child.visible = showHelpers;
+    //         });
+    //     }
+    // });
 
-    lightingHelperRoot.add(new THREE.PointLightHelper(mapCenterPoint));
-    lightingHelperRoot.add(new THREE.SpotLightHelper(laptopSpot));
+    // lightingHelperRoot.add(new THREE.PointLightHelper(mapCenterPoint));
+    // lightingHelperRoot.add(new THREE.SpotLightHelper(laptopSpot));
 }
 
 
