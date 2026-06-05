@@ -5,10 +5,10 @@ export async function loadSounds(camera) {
     const audioManager = new AudioManager({ camera });
     await audioManager.load(
         'water_hose', 
-        './sound/water_hose_pitchdown.wav', 
+        './sound/water_hose_mod.wav', 
         {
             loop: true,
-            volume: 0.35,
+            volume: 0.5,
     });
 
     await audioManager.load(
@@ -21,7 +21,7 @@ export async function loadSounds(camera) {
 
     await audioManager.load(
         'footstep1', 
-        './sound/footstep1.wav', 
+        './sound/footstep1_mod.wav', 
         {
             loop: false,
             volume: 0.5,
@@ -29,7 +29,7 @@ export async function loadSounds(camera) {
 
     await audioManager.load(
         'footstep2', 
-        './sound/footstep2.wav', 
+        './sound/footstep2_mod.wav', 
         {
             loop: false,
             volume: 0.5,
@@ -37,7 +37,7 @@ export async function loadSounds(camera) {
 
     await audioManager.load(
         'reload',
-        './sound/reload.wav',
+        './sound/reload_mod.wav',
         {
             loop: false,
             volume: 1,
@@ -45,7 +45,7 @@ export async function loadSounds(camera) {
 
     await audioManager.load(
         'mouse_click',
-        './sound/mouse_click.wav',
+        './sound/mouse_click_mod.wav',
         {
             loop: false,
             volume: 0.5,
@@ -53,7 +53,7 @@ export async function loadSounds(camera) {
 
     await audioManager.load(
         'bgm',
-        './sound/bgm.wav',
+        './sound/bgm_mod.wav',
         {
             loop: true,
             volume: 0.3,
@@ -61,7 +61,7 @@ export async function loadSounds(camera) {
 
     await audioManager.load(
         'casher',
-        './sound/casher.wav',
+        './sound/casher_mod.wav',
         {
             loop: false,
             volume: 0.5,
@@ -77,7 +77,7 @@ export async function loadSounds(camera) {
 
     await audioManager.load(
         'clap',
-        './sound/clapping.wav',
+        './sound/clapping_mod.wav',
         {
             loop: false,
             volume: 0.5,
