@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { WORLD_LAPTOP_SCREEN } from '../RenderOrder.js';
 
 // 인게임 노트북 화면에 텍스쳐로 보이는 UI입니다.
-// 특별하게 업그레이드 인터랙션 및 업그레이드 시스템도 관리합니다. LaptopUpgradeUI는 노트북 화면 모델 위치를 찾아서,
+// 특별하게 업그레이드 인터랙션도 관리합니다. LaptopUpgradeUI는 노트북 화면 모델 위치를 찾아서,
 // 그 위치에 메시를 하나 더 덮고 그 메시의 텍스쳐로 UI를 그리는 방식으로 구현되어 있습니다. 따라서 노트북 모델이 로드되고 준비된 이후에 tryInitialize() 함수를 호출해주어야 합니다.
 export class LaptopUpgradeUI {
     constructor({

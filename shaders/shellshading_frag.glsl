@@ -26,7 +26,7 @@ void main() {
     color += noise * 0.002;
 
     // CRT 효과를 위해 수평 스캔라인을 추가합니다.
-    float scanline = 0.85 + 0.15 * sin(vUv.y * 900.0);
+    float scanline = 0.975 + 0.025 * sin(vUv.y * 900.0);
     color *= scanline;
 
     // 화면을 블럭으로 나눠 순서대로 검게 덮습니다.

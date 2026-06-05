@@ -35,7 +35,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // 포스트 프로세싱용 쉐이더와 렌더 타겟 세팅
-const postVertexShader = await loadShader('./shaders/srt_screen_vert.glsl');
+const postVertexShader = await loadShader('./shaders/crt_screen_vert.glsl');
 const postFragmentShader = await loadShader('./shaders/shellshading_frag.glsl');
 
 const postProcessTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
