@@ -49,7 +49,7 @@ export class WashableModel extends Model {
         // 모델에서 모든 메시를 수집
         this.model.traverse((child) => {
             if (!child.isMesh || !child.geometry?.attributes?.uv) return;
-            if (Array.isArray(child.material)) return;
+            if (Array.isArray(child.material)) return; // 다중 재질은 지원하지 않음 (복잡도 증가 방지)
 
             sourceMeshes.push(child);
         });

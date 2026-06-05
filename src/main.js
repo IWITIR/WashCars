@@ -35,7 +35,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // 포스트 프로세싱용 쉐이더와 렌더 타겟 세팅
-const postVertexShader = await loadShader('./shaders/vert.glsl');
+const postVertexShader = await loadShader('./shaders/srt_screen_vert.glsl');
 const postFragmentShader = await loadShader('./shaders/shellshading_frag.glsl');
 
 const postProcessTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
@@ -54,7 +54,7 @@ const postMaterial = createMaterialFromShader({
         depthWrite: false,
     },
 });
-const postQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMaterial);
+const postQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2, 64, 64), postMaterial);
 postScene.add(postQuad);
 
 // 시작 화면 html 가져오기
@@ -350,11 +350,12 @@ function gameUpdate() {
     postMaterial.uniforms.uTransitionProgress.value = endingManager.getTransitionProgress();
     renderer.setRenderTarget(postProcessTarget);
     renderer.render(scene, camera);
+    // console.log(renderer.info.render); 
     renderer.setRenderTarget(null);
     renderer.render(postScene, postCamera);
+    // console.log(renderer.info.render); 
 
     world.step(); // 물리 시뮬레이션 한 스텝 진행
-    // console.log(renderer.info.render); 
 }
 
 // 창 크기 변경 대응
